@@ -626,6 +626,8 @@ const SECTIONS = {
       { key: 'badge_en', label: 'Badge (EN)', type: 'text' },
       { key: 'desc_fr', label: 'Description (FR)', type: 'textarea', full: true },
       { key: 'desc_en', label: 'Description (EN)', type: 'textarea', full: true },
+      { key: 'sadhana_fr', label: 'Sadhana utilisée (FR)', type: 'text', full: true, placeholder: 'Ex: Prières pour la méditation' },
+      { key: 'sadhana_en', label: 'Sadhana utilisée (EN)', type: 'text', full: true, placeholder: 'Ex: Prayers for meditation' },
     ],
   },
   cafe: {
@@ -645,7 +647,10 @@ const SECTIONS = {
     titleField: 'jour_fr',
     subField: item => `${item.ouverture||''} — ${item.fermeture||''}`,
     fields: [
-      { key: 'lieu', label: 'Lieu', type: 'text', default: 'cafe' },
+      { key: 'lieu', label: 'Lieu', type: 'select', options: [
+        { value: 'cafe', label: 'World Peace Café' },
+        { value: 'shop', label: 'Boutique' },
+      ]},
       { key: 'jour_fr', label: 'Jour (FR)', type: 'text' },
       { key: 'jour_en', label: 'Jour (EN)', type: 'text' },
       { key: 'ouverture', label: 'Ouverture', type: 'text', placeholder: '08h00' },
