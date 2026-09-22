@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Migration → Firebase</title>
+<style>
+body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; color: #2A3530; background: #FFFAF8; }
+h1 { color: #D14E72; font-size: 24px; }
+button { margin-top: 20px; padding: 12px 24px; background: #22594E; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+button:hover { background: #318F7D; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.status { margin-top: 16px; padding: 14px; border-radius: 10px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.success { background: #E6F3EF; color: #22594E; border: 1px solid #318F7D; }
+.error { background: #FCEEF2; color: #B8305A; border: 1px solid #D14E72; }
+.info { background: #FFF7E6; color: #D4900A; border: 1px solid #D4900A; }
+.step { margin-top: 24px; padding: 16px; background: #fff; border: 1px solid #EDDDD8; border-radius: 12px; }
+.step h3 { margin: 0 0 8px; color: #22594E; }
+.step p { margin: 4px 0; font-size: 14px; color: #5E6E68; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+td { padding: 4px 8px; border-bottom: 1px solid #EDDDD8; }
+td:first-child { font-weight: 600; color: #22594E; }
+td:last-child { text-align: right; }
+</style>
+</head>
+<body>
+
+<h1>Migration vers Firebase</h1>
+<p>Les données du Google Sheet sont intégrées dans cette page. Cliquez pour les envoyer dans Firebase.</p>
+
+<div class="step">
+<h3>Aperçu des données</h3>
+<table id="preview"></table>
+</div>
+
+<div class="step">
+<h3>Envoyer dans Firebase</h3>
+<p>Les données seront écrites dans votre base <code>cd2026-appmobile</code>.</p>
+<button onclick="doMigrate()" id="migrateBtn">Lancer la migration</button>
+</div>
+
+<div id="output"></div>
+
+<script>
+const FIREBASE_URL = 'https://cd2026-appmobile-default-rtdb.europe-west1.firebasedatabase.app';
+
+const DATA = {
+  "cafe": [
+    {"categorie_fr": "Boissons chaudes", "categorie_en": "Hot drinks", "nom_fr": "Thé (variétés)", "nom_en": "Tea (varieties)", "prix": "1,50€"},
+    {"categorie_fr": "Boissons chaudes", "categorie_en": "Hot drinks", "nom_fr": "Café", "nom_en": "Coffee", "prix": "2,00€"},
+    {"categorie_fr": "Boissons chaudes", "categorie_en": "Hot drinks", "nom_fr": "Chocolat chaud", "nom_en": "Hot chocolate", "prix": "2,50€"},
+    {"categorie_fr": "Boissons chaudes", "categorie_en": "Hot drinks", "nom_fr": "Chai", "nom_en": "Chai latte", "prix": "3,00€"},
+    {"categorie_fr": "Boissons fraîches", "categorie_en": "Cold drinks", "nom_fr": "Jus de fruits", "nom_en": "Fruit juice", "prix": "2,00€"},
+    {"categorie_fr": "Boissons fraîches", "categorie_en": "Cold drinks", "nom_fr": "Eau aromatisée", "nom_en": "Flavoured water", "prix": "1,00€"},
+    {"categorie_fr": "Pâtisseries", "categorie_en": "Pastries", "nom_fr": "Part de gâteau", "nom_en": "Slice of cake", "prix": "2,50€"},
+    {"categorie_fr": "Pâtisseries", "categorie_en": "Pastries", "nom_fr": "Cookie", "nom_en": "Cookie", "prix": "1,50€"},
+    {"categorie_fr": "Pâtisseries", "categorie_en": "Pastries", "nom_fr": "Muffin (végan dispo.)", "nom_en": "Muffin (vegan avail.)", "prix": "2,00€"}
+  ],
+  "alertes": [
+    {"id": "navettes", "actif": "oui", "emoji": "🚌", "titre_fr": "Réservez vos navettes !", "titre_en": "Book your shuttles!", "contenu_fr": "Pensez à <strong>réserver votre navette</strong> depuis la gare du Mans avant le 20 novembre. Envoyer un mail à navette@kadampafrance.org", "contenu_en": "Please <strong>book your shuttle</strong> from Le Mans station before November 20th."},
+    {"id": "cuisine", "actif": "", "emoji": "👨‍🍳", "titre_fr": "Bénévoles en cuisine", "titre_en": "Kitchen volunteers needed", "contenu_fr": "Nous avons besoin de bénévoles pour aider en cuisine samedi matin. Merci de vous signaler à l'accueil !", "contenu_en": "We need volunteers to help in the kitchen Saturday morning. Please sign up at reception!"}
+  ],
+  "programme": [
+    {"jour": "ven-27", "heure": "13h30", "titre_fr": "Ouverture des inscriptions", "titre_en": "Registration opens", "type": "practical", "desc_fr": "Bureau des inscriptions au rez-de-chaussée", "desc_en": "Registration desk on the ground floor", "badge_fr": "", "badge_en": ""},
+    {"jour": "ven-27", "heure": "18h – 19h", "titre_fr": "Dîner", "titre_en": "Dinner", "type": "meal", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "ven-27", "heure": "20h – 21h30", "titre_fr": "Introduction", "titre_en": "Introduction", "type": "teaching", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "sam-28", "heure": "09h – 09h50", "titre_fr": "Méditation", "titre_en": "Meditation", "type": "meditation", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "sam-28", "heure": "11h – 13h", "titre_fr": "Transmission des bénédictions de Tara Verte", "titre_en": "Green Tara Blessing Empowerment", "type": "ceremony", "desc_fr": "", "desc_en": "", "badge_fr": "Transmission", "badge_en": "Empowerment"},
+    {"jour": "sam-28", "heure": "13h15 – 14h15", "titre_fr": "Déjeuner", "titre_en": "Lunch", "type": "meal", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "sam-28", "heure": "16h30 – 18h", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame", "badge_fr": "", "badge_en": ""},
+    {"jour": "sam-28", "heure": "18h15 – 19h15", "titre_fr": "Dîner", "titre_en": "Dinner", "type": "meal", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "sam-28", "heure": "20h15 – 21h15", "titre_fr": "Joyau qui exauce les souhaits", "titre_en": "Wishfulfilling Jewel", "type": "ceremony", "desc_fr": "Prières avec offrandes de nourriture", "desc_en": "Prayers with food offerings", "badge_fr": "", "badge_en": ""},
+    {"jour": "dim-29", "heure": "09h – 10h", "titre_fr": "Méditation", "titre_en": "Meditation", "type": "meditation", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "dim-29", "heure": "11h – 12h30", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame", "badge_fr": "", "badge_en": ""},
+    {"jour": "dim-29", "heure": "12h45 – 13h45", "titre_fr": "Déjeuner", "titre_en": "Lunch", "type": "meal", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "dim-29", "heure": "16h30 – 18h", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame", "badge_fr": "", "badge_en": ""},
+    {"jour": "dim-29", "heure": "18h15 – 19h15", "titre_fr": "Dîner", "titre_en": "Dinner", "type": "meal", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "dim-29", "heure": "20h15 – 21h15", "titre_fr": "Joyau qui exauce les souhaits", "titre_en": "Wishfulfilling Jewel", "type": "ceremony", "desc_fr": "Prières avec offrandes de nourriture", "desc_en": "Prayers with food offerings", "badge_fr": "", "badge_en": ""},
+    {"jour": "lun-30", "heure": "09h – 10h", "titre_fr": "Méditation", "titre_en": "Meditation", "type": "meditation", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "lun-30", "heure": "11h – 12h30", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame", "badge_fr": "", "badge_en": ""},
+    {"jour": "lun-30", "heure": "12h45 – 13h45", "titre_fr": "Déjeuner", "titre_en": "Lunch", "type": "meal", "desc_fr": "", "desc_en": "", "badge_fr": "", "badge_en": ""},
+    {"jour": "lun-30", "heure": "14h – 17h", "titre_fr": "Entraide — Démontage", "titre_en": "Helping out — Takedown", "type": "practical", "desc_fr": "Tous ensemble pour remettre le château en ordre", "desc_en": "Everyone together to tidy up the château", "badge_fr": "", "badge_en": ""}
+  ],
+  "infos": [
+    {"id": "lieu", "titre_fr": "Lieu & accès", "titre_en": "Venue & access", "contenu_fr": "<strong>Centre de Méditation Kadampa France</strong><br>Château de Segrais, 72220 Saint-Mars-d'Outillé<br><br><a href=\"https://maps.google.com/?q=Chateau+de+Segrais+Saint-Mars-d%27Outille\" target=\"_blank\">Ouvrir dans Google Maps ↗</a>", "contenu_en": "<strong>Kadampa Meditation Centre France</strong><br>Château de Segrais, 72220 Saint-Mars-d'Outillé<br><br><a href=\"https://maps.google.com/?q=Chateau+de+Segrais+Saint-Mars-d%27Outille\" target=\"_blank\">Open in Google Maps ↗</a>"},
+    {"id": "navettes", "titre_fr": "Navettes", "titre_en": "Shuttles", "contenu_fr": "<strong>Depuis la gare d'Ecommoy — 5 € par trajet</strong><br><br>Vendredi 27 (arrivées) : 12h30 – 19h15<br>Lundi 30 (départs) : 8h45 – 19h15<br><br>Pas de navette samedi ni dimanche.<br>Réservation au plus tard le <strong>24 novembre</strong>.<br><br>Tél. : <a href=\"tel:+33243877102\">02 43 87 71 02</a>", "contenu_en": "<strong>From Ecommoy station — €5 per trip</strong><br><br>Friday 27 (arrivals): 12:30pm – 7:15pm<br>Monday 30 (departures): 8:45am – 7:15pm<br><br>No shuttle on Saturday or Sunday.<br>Book by <strong>24 November</strong>.<br><br>Phone: <a href=\"tel:+33243877102\">02 43 87 71 02</a>"},
+    {"id": "transport", "titre_fr": "Autres transports", "titre_en": "Other transport", "contenu_fr": "<strong>Bus</strong> : Ligne 217 depuis Le Mans → Saint-Mars-d'Outillé, ~2,50 €, ~1h. Puis 15 min à pied.<br><br><strong>Train</strong> : TER Le Mans → gare d'Ecommoy.<br><br><strong>Taxi</strong> : Fouqueray — <a href=\"tel:+33243427368\">02 43 42 73 68</a> (fermé dim.). ~20 € CMK ↔ Ecommoy.<br><br><strong>Covoiturage</strong> : Tableau sur place.", "contenu_en": "<strong>Bus</strong>: Line 217 from Le Mans → Saint-Mars-d'Outillé, ~€2.50, ~1h. Then 15 min walk.<br><br><strong>Train</strong>: TER Le Mans → Ecommoy station.<br><br><strong>Taxi</strong>: Fouqueray — <a href=\"tel:+33243427368\">02 43 42 73 68</a> (closed Sun). ~€20 CMK ↔ Ecommoy.<br><br><strong>Carpooling</strong>: Board on site."},
+    {"id": "traduction", "titre_fr": "Traduction", "titre_en": "Translation", "contenu_fr": "Traduction simultanée <strong>français → anglais</strong> pour tous les enseignements et méditations. Casques fournis à l'accueil.", "contenu_en": "Simultaneous <strong>French → English</strong> translation for all teachings and meditations. Headsets provided at reception."},
+    {"id": "familles", "titre_fr": "Familles & enfants", "titre_en": "Families & children", "contenu_fr": "Une <strong>salle de retransmission vidéo</strong> est disponible pour les familles avec enfants.", "contenu_en": "A <strong>video relay room</strong> is available for families with children."},
+    {"id": "streaming", "titre_fr": "Streaming", "titre_en": "Streaming", "contenu_fr": "<strong>Transmission de Tara Verte</strong> : en direct uniquement (sam. 28, 11h–13h).<br><br><strong>Enseignements et prières</strong> : en direct + différé jusqu'au mardi 8 décembre 12h30.", "contenu_en": "<strong>Green Tara Empowerment</strong>: live only (Sat 28, 11am–1pm).<br><br><strong>Teachings & prayers</strong>: live + on demand until Tuesday 8 December 12:30pm."},
+    {"id": "repas-info", "titre_fr": "Repas & régimes", "titre_en": "Meals & dietary", "contenu_fr": "Tous les repas sont <strong>100 % végétariens</strong>. Alternative <strong>végan sans gluten</strong> sur demande à l'inscription. Petit-déjeuner inclus.", "contenu_en": "All meals are <strong>100% vegetarian</strong>. <strong>Vegan gluten-free</strong> alternative on request at registration. Breakfast included."},
+    {"id": "contacts", "titre_fr": "Contacts", "titre_en": "Contacts", "contenu_fr": "<strong>Inscriptions</strong><br><a href=\"mailto:inscriptions-festival@kadampafrance.org\">inscriptions-festival@kadampafrance.org</a><br><br><strong>Bénévolat</strong><br><a href=\"mailto:benevolat-festival@kadampafrance.org\">benevolat-festival@kadampafrance.org</a><br><br><strong>Navettes</strong><br><a href=\"tel:+33243877102\">02 43 87 71 02</a>", "contenu_en": "<strong>Registration</strong><br><a href=\"mailto:inscriptions-festival@kadampafrance.org\">inscriptions-festival@kadampafrance.org</a><br><br><strong>Volunteering</strong><br><a href=\"mailto:benevolat-festival@kadampafrance.org\">benevolat-festival@kadampafrance.org</a><br><br><strong>Shuttles</strong><br><a href=\"tel:+33243877102\">02 43 87 71 02</a>"}
+  ],
+  "repas": [
+    {"jour": "ven-27", "service_fr": "Dîner", "service_en": "Dinner", "heure": "18h – 19h", "plat_fr": "Soupe de légumes de saison", "plat_en": "Seasonal vegetable soup", "regime": "veg,vgf"},
+    {"jour": "ven-27", "service_fr": "Dîner", "service_en": "Dinner", "heure": "18h – 19h", "plat_fr": "Gratin de pâtes aux légumes", "plat_en": "Pasta and vegetable gratin", "regime": "veg"},
+    {"jour": "ven-27", "service_fr": "Dîner", "service_en": "Dinner", "heure": "18h – 19h", "plat_fr": "Salade composée", "plat_en": "Mixed salad", "regime": "veg,vgf"},
+    {"jour": "sam-28", "service_fr": "Petit-déjeuner", "service_en": "Breakfast", "heure": "7h30 - 9h", "plat_fr": "", "plat_en": "", "regime": ""},
+    {"jour": "sam-28", "service_fr": "Déjeuner", "service_en": "Lunch", "heure": "13h15 – 14h15", "plat_fr": "Curry de légumes au lait de coco", "plat_en": "Coconut vegetable curry", "regime": "veg,vgf"},
+    {"jour": "sam-28", "service_fr": "Déjeuner", "service_en": "Lunch", "heure": "13h15 – 14h15", "plat_fr": "Riz basmati", "plat_en": "Basmati rice", "regime": "veg,vgf"},
+    {"jour": "sam-28", "service_fr": "Dîner", "service_en": "Dinner", "heure": "18h15 – 19h15", "plat_fr": "Quiche aux poireaux", "plat_en": "Leek quiche", "regime": "veg"},
+    {"jour": "sam-28", "service_fr": "Dîner", "service_en": "Dinner", "heure": "18h15 – 19h15", "plat_fr": "Salade verte", "plat_en": "Green salad", "regime": "veg,vgf"},
+    {"jour": "dim-29", "service_fr": "Déjeuner", "service_en": "Lunch", "heure": "12h45 – 13h45", "plat_fr": "Lasagnes végétariennes", "plat_en": "Vegetarian lasagne", "regime": "veg"},
+    {"jour": "dim-29", "service_fr": "Déjeuner", "service_en": "Lunch", "heure": "12h45 – 13h45", "plat_fr": "Salade de quinoa", "plat_en": "Quinoa salad", "regime": "veg,vgf"},
+    {"jour": "dim-29", "service_fr": "Dîner", "service_en": "Dinner", "heure": "18h15 – 19h15", "plat_fr": "Dhal de lentilles corail", "plat_en": "Red lentil dhal", "regime": "veg,vgf"},
+    {"jour": "lun-30", "service_fr": "Déjeuner", "service_en": "Lunch", "heure": "12h45 – 13h45", "plat_fr": "Repas convivial de clôture", "plat_en": "Farewell community meal", "regime": "veg"}
+  ],
+  "horaires": [
+    {"lieu": "cafe", "jour_fr": "Vendredi 27", "jour_en": "Friday 27", "ouverture": "16h", "fermeture": "21h30"},
+    {"lieu": "cafe", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "10h", "fermeture": "21h30"},
+    {"lieu": "cafe", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "10h", "fermeture": "21h30"},
+    {"lieu": "cafe", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "10h", "fermeture": "14h"}
+  ]
+};
+
+// Show preview
+const preview = document.getElementById('preview');
+Object.entries(DATA).forEach(([key, arr]) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>' + key + '</td><td>' + arr.length + ' éléments</td>';
+  preview.appendChild(tr);
+});
+
+async function doMigrate() {
+  const output = document.getElementById('output');
+  const btn = document.getElementById('migrateBtn');
+
+  btn.disabled = true;
+  btn.textContent = 'Migration en cours...';
+  output.innerHTML = '<div class="status info">Écriture dans Firebase...</div>';
+
+  try {
+    const resp = await fetch(FIREBASE_URL + '/data.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DATA)
+    });
+
+    if (!resp.ok) throw new Error('Erreur Firebase: ' + resp.status);
+
+    // Verify
+    const verifyResp = await fetch(FIREBASE_URL + '/data.json');
+    const verifyData = await verifyResp.json();
+    const verifySections = verifyData ? Object.keys(verifyData) : [];
+
+    let summary = 'Migration terminée avec succès !\n\n';
+    summary += 'Sections écrites :\n';
+    Object.entries(DATA).forEach(([key, arr]) => {
+      const ok = verifySections.includes(key) ? ' OK' : ' MANQUANTE';
+      summary += '  - ' + key + ' : ' + arr.length + ' éléments' + ok + '\n';
+    });
+    summary += '\nVous pouvez maintenant ouvrir index.html pour voir l\'app.';
+
+    output.innerHTML = '<div class="status success">' + summary + '</div>';
+
+  } catch (e) {
+    output.innerHTML = '<div class="status error">Erreur : ' + e.message + '\n\nVérifiez que les règles Firebase autorisent l\'écriture sur /data.</div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Relancer la migration';
+}
+</script>
+
+</body>
+</html>

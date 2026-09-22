@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Admin — CD2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap">
+<style>
+/* ══════════════════════════════════════
+   TOKENS
+   ══════════════════════════════════════ */
+:root {
+  --pink: #D14E72;
+  --pink-deep: #B8305A;
+  --pink-soft: #FCEEF2;
+  --pink-mist: #FDF5F7;
+  --green-deep: #22594E;
+  --green: #318F7D;
+  --green-soft: #E6F3EF;
+  --saffron: #EB570F;
+  --saffron-soft: #FFF0E8;
+  --gold: #D4900A;
+  --gold-soft: #FFF7E6;
+  --bg: #FFFAF8;
+  --surface: #FFFFFF;
+  --surface-alt: #FDF5F3;
+  --text: #2A3530;
+  --text-secondary: #5E6E68;
+  --text-muted: #8A9A94;
+  --border: #EDDDD8;
+  --border-light: #F5EBE7;
+  --shadow: rgba(180, 48, 90, 0.06);
+  --shadow-md: rgba(180, 48, 90, 0.1);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --danger: #CD1A30;
+  --danger-soft: #FFF0F0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pink: #D8688A;
+    --pink-deep: #A83860;
+    --pink-soft: #2E1820;
+    --pink-mist: #241418;
+    --green-deep: #78C8A8;
+    --green: #5CB89F;
+    --green-soft: #142820;
+    --saffron: #F27535;
+    --saffron-soft: #2C1810;
+    --gold: #E8A520;
+    --gold-soft: #2A2210;
+    --bg: #140E10;
+    --surface: #221A1E;
+    --surface-alt: #2A1E22;
+    --text: #E8DED5;
+    --text-secondary: #A8988E;
+    --text-muted: #706860;
+    --border: #3A2830;
+    --border-light: #2E2028;
+    --shadow: rgba(0,0,0,0.25);
+    --shadow-md: rgba(0,0,0,0.35);
+    --danger: #FF6B7A;
+    --danger-soft: #2E1418;
+  }
+}
+:root[data-theme="dark"] {
+  --pink: #D8688A;
+  --pink-deep: #A83860;
+  --pink-soft: #2E1820;
+  --pink-mist: #241418;
+  --green-deep: #78C8A8;
+  --green: #5CB89F;
+  --green-soft: #142820;
+  --saffron: #F27535;
+  --saffron-soft: #2C1810;
+  --gold: #E8A520;
+  --gold-soft: #2A2210;
+  --bg: #140E10;
+  --surface: #221A1E;
+  --surface-alt: #2A1E22;
+  --text: #E8DED5;
+  --text-secondary: #A8988E;
+  --text-muted: #706860;
+  --border: #3A2830;
+  --border-light: #2E2028;
+  --shadow: rgba(0,0,0,0.25);
+  --shadow-md: rgba(0,0,0,0.35);
+  --danger: #FF6B7A;
+  --danger-soft: #2E1418;
+}
+
+/* ══════════════════════════════════════
+   BASE
+   ══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+h1, h2, h3 { font-family: var(--font-display); margin: 0; }
+
+/* ══════════════════════════════════════
+   LOGIN
+   ══════════════════════════════════════ */
+#login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 16px;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 4px 24px var(--shadow);
+  text-align: center;
+}
+.login-card h1 {
+  font-size: 1.7rem;
+  color: var(--green-deep);
+  margin-bottom: 6px;
+}
+.login-card .subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 28px;
+}
+.login-card .setup-note {
+  color: var(--saffron);
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: var(--saffron-soft);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+/* ══════════════════════════════════════
+   FORMS
+   ══════════════════════════════════════ */
+.field { margin-bottom: 14px; text-align: left; }
+.field label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--green);
+}
+.field textarea { resize: vertical; min-height: 80px; }
+.field select { cursor: pointer; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--green-deep);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) { opacity: 0.9; }
+
+.btn-saffron {
+  background: var(--saffron);
+  color: #fff;
+}
+.btn-saffron:hover:not(:disabled) { opacity: 0.9; }
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+.btn-outline:hover { border-color: var(--text-muted); }
+
+.btn-block { width: 100%; }
+
+.error-msg {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+/* ══════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════ */
+#dashboard { display: none; }
+
+.topbar {
+  background: var(--green-deep);
+  color: #fff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.topbar-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-links a {
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-size: 0.82rem;
+}
+.topbar-links a:hover { color: #fff; }
+.topbar .btn-logout {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+.topbar .btn-logout:hover { background: rgba(255,255,255,0.25); }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 49px;
+  z-index: 99;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs button {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+.tabs button.active {
+  color: var(--saffron);
+  border-bottom-color: var(--saffron);
+}
+.tabs button:hover:not(.active) { color: var(--text); }
+
+/* Section */
+.section { padding: 16px 0 80px; }
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-header h3 {
+  font-size: 1.3rem;
+  color: var(--green-deep);
+}
+.section-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* Cards */
+.item-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.item-card:hover { box-shadow: 0 2px 12px var(--shadow); }
+
+.item-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  cursor: pointer;
+  gap: 10px;
+}
+.item-summary-text {
+  flex: 1;
+  min-width: 0;
+}
+.item-summary-text .item-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item-summary-text .item-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.item-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.item-actions button:hover { background: var(--border-light); }
+.item-actions .btn-delete { color: var(--danger); }
+
+.item-form {
+  display: none;
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border-light);
+}
+.item-form.open { display: block; }
+
+.item-form .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.item-form .form-grid .full { grid-column: 1 / -1; }
+
+@media (max-width: 480px) {
+  .item-form .form-grid { grid-template-columns: 1fr; }
+}
+
+/* Add new item area */
+.add-card {
+  background: var(--surface-alt);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.add-card .item-form { display: block; padding: 14px; border-top: none; }
+.add-card h4 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--green-deep);
+  margin: 0 0 12px;
+}
+
+/* Save bar */
+.save-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 100;
+  box-shadow: 0 -2px 12px var(--shadow);
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--green-deep);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 4px 16px var(--shadow-md);
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+  pointer-events: auto;
+}
+.toast.error { background: var(--danger); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--saffron);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Move items */
+.item-card .move-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.move-btns button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0 4px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.move-btns button:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN SCREEN
+     ══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Administration CD2026</h1>
+    <p class="subtitle">Celebration du Dharma 2026</p>
+
+    <!-- Setup form (first time) -->
+    <div id="setup-form" style="display:none">
+      <div class="setup-note">
+        Premiere configuration : choisissez un mot de passe administrateur.
+      </div>
+      <form onsubmit="return handleSetup()">
+        <div class="field">
+          <label for="setup-pw">Mot de passe</label>
+          <input type="password" id="setup-pw" required autocomplete="new-password" minlength="4">
+        </div>
+        <div class="field">
+          <label for="setup-pw2">Confirmer le mot de passe</label>
+          <input type="password" id="setup-pw2" required autocomplete="new-password" minlength="4">
+        </div>
+        <div id="setup-error" class="error-msg" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-block" id="setup-btn">Creer le mot de passe</button>
+      </form>
+    </div>
+
+    <!-- Login form -->
+    <div id="login-form" style="display:none">
+      <form onsubmit="return handleLogin()">
+        <div class="field">
+          <label for="login-pw">Mot de passe</label>
+          <input type="password" id="login-pw" required autocomplete="current-password">
+        </div>
+        <div id="login-error" class="error-msg" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">Connexion</button>
+      </form>
+    </div>
+
+    <!-- Loading -->
+    <div id="login-loading" class="loading-overlay">
+      <span class="spinner"></span> Chargement...
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     DASHBOARD
+     ══════════════════════════════════════ -->
+<div id="dashboard">
+  <div class="topbar">
+    <h2>Admin CD2026</h2>
+    <div class="topbar-links">
+      <a href="index.html" target="_blank">Previsualiser</a>
+      <button class="btn-logout" onclick="logout()">Deconnexion</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="tab-bar"></div>
+
+  <div class="container">
+    <div id="section-content"></div>
+  </div>
+
+  <div class="save-bar">
+    <button class="btn btn-saffron" id="save-btn" onclick="saveCurrentSection()">
+      Sauvegarder cette section
+    </button>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   CONFIG
+   ══════════════════════════════════════ */
+const CONFIG = {
+  FIREBASE_URL: 'https://cd2026-appmobile-default-rtdb.europe-west1.firebasedatabase.app', // Same URL as in index.html
+  PASSWORD_HASH: '', // Not used — hash is stored in Firebase
+};
+
+/* ══════════════════════════════════════
+   SCHEMA — defines each section
+   ══════════════════════════════════════ */
+const JOUR_OPTIONS = [
+  { value: 'ven-27', label: 'Vendredi 27' },
+  { value: 'sam-28', label: 'Samedi 28' },
+  { value: 'dim-29', label: 'Dimanche 29' },
+  { value: 'lun-30', label: 'Lundi 30' },
+];
+
+const SECTIONS = {
+  programme: {
+    label: 'Programme',
+    titleField: 'titre_fr',
+    subField: item => `${(JOUR_OPTIONS.find(j=>j.value===item.jour)||{}).label||item.jour||''} — ${item.heure||''}`,
+    fields: [
+      { key: 'jour', label: 'Jour', type: 'select', options: JOUR_OPTIONS },
+      { key: 'heure', label: 'Heure', type: 'text', placeholder: '09h00–10h00' },
+      { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
+      { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
+      { key: 'type', label: 'Type', type: 'select', options: [
+        { value: 'meditation', label: 'Meditation' },
+        { value: 'teaching', label: 'Enseignement' },
+        { value: 'ceremony', label: 'Ceremonie' },
+        { value: 'meal', label: 'Repas' },
+        { value: 'practical', label: 'Pratique' },
+      ]},
+      { key: 'badge_fr', label: 'Badge (FR)', type: 'text' },
+      { key: 'badge_en', label: 'Badge (EN)', type: 'text' },
+      { key: 'desc_fr', label: 'Description (FR)', type: 'textarea', full: true },
+      { key: 'desc_en', label: 'Description (EN)', type: 'textarea', full: true },
+    ],
+  },
+  cafe: {
+    label: 'Cafe',
+    titleField: 'nom_fr',
+    subField: item => `${item.categorie_fr||''} — ${item.prix||''}`,
+    fields: [
+      { key: 'categorie_fr', label: 'Categorie (FR)', type: 'text' },
+      { key: 'categorie_en', label: 'Categorie (EN)', type: 'text' },
+      { key: 'nom_fr', label: 'Nom (FR)', type: 'text' },
+      { key: 'nom_en', label: 'Nom (EN)', type: 'text' },
+      { key: 'prix', label: 'Prix', type: 'text', placeholder: '2,50 EUR' },
+    ],
+  },
+  horaires: {
+    label: 'Horaires',
+    titleField: 'jour_fr',
+    subField: item => `${item.ouverture||''} — ${item.fermeture||''}`,
+    fields: [
+      { key: 'lieu', label: 'Lieu', type: 'text', default: 'cafe' },
+      { key: 'jour_fr', label: 'Jour (FR)', type: 'text' },
+      { key: 'jour_en', label: 'Jour (EN)', type: 'text' },
+      { key: 'ouverture', label: 'Ouverture', type: 'text', placeholder: '08h00' },
+      { key: 'fermeture', label: 'Fermeture', type: 'text', placeholder: '21h00' },
+    ],
+  },
+  repas: {
+    label: 'Repas',
+    titleField: 'plat_fr',
+    subField: item => `${(JOUR_OPTIONS.find(j=>j.value===item.jour)||{}).label||item.jour||''} — ${item.service_fr||''}`,
+    fields: [
+      { key: 'jour', label: 'Jour', type: 'select', options: JOUR_OPTIONS },
+      { key: 'service_fr', label: 'Service (FR)', type: 'text' },
+      { key: 'service_en', label: 'Service (EN)', type: 'text' },
+      { key: 'heure', label: 'Heure', type: 'text', placeholder: '12h45–13h45' },
+      { key: 'plat_fr', label: 'Plat (FR)', type: 'text', full: true },
+      { key: 'plat_en', label: 'Plat (EN)', type: 'text', full: true },
+      { key: 'regime', label: 'Regime', type: 'text', placeholder: 'veg,vgf' },
+    ],
+  },
+  infos: {
+    label: 'Infos',
+    titleField: 'titre_fr',
+    subField: item => item.id || '',
+    fields: [
+      { key: 'id', label: 'Identifiant', type: 'text', placeholder: 'transport' },
+      { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
+      { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
+      { key: 'contenu_fr', label: 'Contenu (FR) — HTML accepte', type: 'textarea', full: true },
+      { key: 'contenu_en', label: 'Contenu (EN) — HTML accepte', type: 'textarea', full: true },
+    ],
+  },
+  alertes: {
+    label: 'Alertes',
+    titleField: 'titre_fr',
+    subField: item => `${item.emoji||''} ${item.actif === 'oui' ? 'Active' : 'Inactive'}`,
+    fields: [
+      { key: 'id', label: 'Identifiant', type: 'text' },
+      { key: 'actif', label: 'Active', type: 'select', options: [
+        { value: 'oui', label: 'Oui' },
+        { value: 'non', label: 'Non' },
+      ]},
+      { key: 'emoji', label: 'Emoji', type: 'text', placeholder: '⚠️' },
+      { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
+      { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
+      { key: 'contenu_fr', label: 'Contenu (FR) — HTML accepte', type: 'textarea', full: true },
+      { key: 'contenu_en', label: 'Contenu (EN) — HTML accepte', type: 'textarea', full: true },
+    ],
+  },
+};
+
+/* ══════════════════════════════════════
+   STATE
+   ══════════════════════════════════════ */
+let data = {};
+let currentTab = 'programme';
+let addingNew = {};   // { sectionKey: true } if the "add" form is open
+let expandedItems = {}; // { sectionKey: Set of indices }
+let lastSaved = {};   // { sectionKey: timestamp string }
+
+/* ══════════════════════════════════════
+   UTILS
+   ══════════════════════════════════════ */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function fbUrl(path) {
+  return `${CONFIG.FIREBASE_URL}/${path}`;
+}
+
+async function fbGet(path) {
+  const res = await fetch(fbUrl(path));
+  if (!res.ok) throw new Error(`Firebase GET erreur: ${res.status}`);
+  return res.json();
+}
+
+async function fbPut(path, body) {
+  const res = await fetch(fbUrl(path), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Firebase PUT erreur: ${res.status}`);
+  return res.json();
+}
+
+function toast(msg, isError) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  if (loading) {
+    btn.dataset.origText = btn.textContent;
+    btn.innerHTML = '<span class="spinner"></span>';
+  } else {
+    btn.textContent = btn.dataset.origText || '';
+  }
+}
+
+/* ══════════════════════════════════════
+   AUTH
+   ══════════════════════════════════════ */
+async function initAuth() {
+  // Check sessionStorage first
+  try {
+    if (sessionStorage.getItem('cd2026_admin') === 'true') {
+      showDashboard();
+      return;
+    }
+  } catch(e) {}
+
+  // Check if password hash exists in Firebase
+  try {
+    const hash = await fbGet('config/passwordHash.json');
+    document.getElementById('login-loading').style.display = 'none';
+    if (hash) {
+      document.getElementById('login-form').style.display = 'block';
+    } else {
+      document.getElementById('setup-form').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('login-loading').style.display = 'none';
+    // If Firebase is not configured, show a helpful message
+    document.getElementById('setup-form').style.display = 'block';
+    if (!CONFIG.FIREBASE_URL) {
+      document.getElementById('setup-error').textContent = 'Veuillez configurer FIREBASE_URL dans le fichier admin.html.';
+      document.getElementById('setup-error').style.display = 'block';
+      document.getElementById('setup-btn').disabled = true;
+    }
+  }
+}
+
+async function handleSetup() {
+  const pw = document.getElementById('setup-pw').value;
+  const pw2 = document.getElementById('setup-pw2').value;
+  const errEl = document.getElementById('setup-error');
+
+  if (pw !== pw2) {
+    errEl.textContent = 'Les mots de passe ne correspondent pas.';
+    errEl.style.display = 'block';
+    return false;
+  }
+  if (pw.length < 4) {
+    errEl.textContent = 'Le mot de passe doit faire au moins 4 caracteres.';
+    errEl.style.display = 'block';
+    return false;
+  }
+
+  errEl.style.display = 'none';
+  setLoading('setup-btn', true);
+
+  try {
+    const hash = await sha256(pw);
+    await fbPut('config/passwordHash.json', hash);
+    try { sessionStorage.setItem('cd2026_admin', 'true'); } catch(e) {}
+    showDashboard();
+  } catch(e) {
+    errEl.textContent = 'Erreur de connexion a Firebase. Verifiez la configuration.';
+    errEl.style.display = 'block';
+    setLoading('setup-btn', false);
+  }
+  return false;
+}
+
+async function handleLogin() {
+  const pw = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  setLoading('login-btn', true);
+
+  try {
+    const storedHash = await fbGet('config/passwordHash.json');
+    const inputHash = await sha256(pw);
+    if (inputHash === storedHash) {
+      try { sessionStorage.setItem('cd2026_admin', 'true'); } catch(e) {}
+      showDashboard();
+    } else {
+      errEl.textContent = 'Mot de passe incorrect.';
+      errEl.style.display = 'block';
+      setLoading('login-btn', false);
+    }
+  } catch(e) {
+    errEl.textContent = 'Erreur de connexion.';
+    errEl.style.display = 'block';
+    setLoading('login-btn', false);
+  }
+  return false;
+}
+
+function logout() {
+  try { sessionStorage.removeItem('cd2026_admin'); } catch(e) {}
+  location.reload();
+}
+
+/* ══════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════ */
+async function showDashboard() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  buildTabs();
+  await loadData();
+}
+
+function buildTabs() {
+  const bar = document.getElementById('tab-bar');
+  bar.innerHTML = '';
+  for (const [key, section] of Object.entries(SECTIONS)) {
+    const btn = document.createElement('button');
+    btn.textContent = section.label;
+    btn.className = key === currentTab ? 'active' : '';
+    btn.onclick = () => switchTab(key);
+    bar.appendChild(btn);
+  }
+}
+
+function switchTab(key) {
+  currentTab = key;
+  document.querySelectorAll('.tabs button').forEach((btn, i) => {
+    btn.className = Object.keys(SECTIONS)[i] === key ? 'active' : '';
+  });
+  renderSection();
+}
+
+async function loadData() {
+  const content = document.getElementById('section-content');
+  content.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> Chargement des donnees...</div>';
+
+  try {
+    const result = await fbGet('data.json');
+    data = result || {};
+    // Ensure each section is an array
+    for (const key of Object.keys(SECTIONS)) {
+      if (!Array.isArray(data[key])) {
+        data[key] = data[key] ? Object.values(data[key]) : [];
+      }
+    }
+    renderSection();
+  } catch(e) {
+    content.innerHTML = '<div class="empty-state">Erreur de chargement. Verifiez la connexion Firebase.</div>';
+  }
+}
+
+/* ══════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════ */
+function renderSection() {
+  const key = currentTab;
+  const schema = SECTIONS[key];
+  const items = data[key] || [];
+  const content = document.getElementById('section-content');
+
+  if (!expandedItems[key]) expandedItems[key] = new Set();
+
+  let html = '<div class="section">';
+  html += `<div class="section-header">
+    <h3>${schema.label}</h3>
+    <button class="btn btn-outline" onclick="toggleAdd('${key}')" id="add-toggle-${key}">
+      ${addingNew[key] ? 'Annuler' : '+ Ajouter'}
+    </button>
+  </div>`;
+
+  if (lastSaved[key]) {
+    html += `<div class="section-meta">Derniere sauvegarde : ${lastSaved[key]}</div>`;
+  }
+
+  // Add new item form
+  if (addingNew[key]) {
+    html += `<div class="add-card">
+      <div class="item-form">
+        <h4>Nouvel element</h4>
+        <div class="form-grid">${renderFields(schema.fields, {}, key, 'new')}</div>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
+          <button class="btn btn-outline" onclick="toggleAdd('${key}')">Annuler</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (items.length === 0 && !addingNew[key]) {
+    html += '<div class="empty-state">Aucun element. Cliquez sur "+ Ajouter" pour commencer.</div>';
+  }
+
+  // Existing items
+  items.forEach((item, idx) => {
+    const isOpen = expandedItems[key].has(idx);
+    const title = item[schema.titleField] || '(sans titre)';
+    const sub = typeof schema.subField === 'function' ? schema.subField(item) : '';
+
+    html += `<div class="item-card">
+      <div class="item-summary">
+        <div class="move-btns">
+          <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, -1)" title="Monter" ${idx===0?'disabled':''}>&#9650;</button>
+          <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, 1)" title="Descendre" ${idx===items.length-1?'disabled':''}>&#9660;</button>
+        </div>
+        <div class="item-summary-text" onclick="toggleItem('${key}', ${idx})">
+          <div class="item-title">${escHtml(title)}</div>
+          <div class="item-sub">${escHtml(sub)}</div>
+        </div>
+        <div class="item-actions">
+          <button onclick="toggleItem('${key}', ${idx})" title="${isOpen ? 'Fermer' : 'Editer'}">${isOpen ? '&#9650;' : '&#9998;'}</button>
+          <button class="btn-delete" onclick="deleteItem('${key}', ${idx})" title="Supprimer">&#128465;</button>
+        </div>
+      </div>
+      <div class="item-form ${isOpen ? 'open' : ''}" id="form-${key}-${idx}">
+        <div class="form-grid">${renderFields(schema.fields, item, key, idx)}</div>
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function renderFields(fields, item, sectionKey, idx) {
+  return fields.map(f => {
+    const val = item[f.key] !== undefined ? item[f.key] : (f.default || '');
+    const inputId = `field-${sectionKey}-${idx}-${f.key}`;
+    const fullClass = f.full ? ' full' : '';
+    let input;
+
+    if (f.type === 'select') {
+      const opts = f.options.map(o =>
+        `<option value="${o.value}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`
+      ).join('');
+      input = `<select id="${inputId}" onchange="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">
+        <option value="">—</option>${opts}</select>`;
+    } else if (f.type === 'textarea') {
+      input = `<textarea id="${inputId}" rows="3" placeholder="${f.placeholder||''}"
+        oninput="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">${escHtml(val)}</textarea>`;
+    } else {
+      input = `<input type="text" id="${inputId}" value="${escAttr(val)}" placeholder="${f.placeholder||''}"
+        oninput="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">`;
+    }
+
+    return `<div class="field${fullClass}">
+      <label for="${inputId}">${f.label}</label>
+      ${input}
+    </div>`;
+  }).join('');
+}
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ══════════════════════════════════════
+   ACTIONS
+   ══════════════════════════════════════ */
+function toggleAdd(key) {
+  addingNew[key] = !addingNew[key];
+  renderSection();
+}
+
+function toggleItem(key, idx) {
+  if (!expandedItems[key]) expandedItems[key] = new Set();
+  if (expandedItems[key].has(idx)) {
+    expandedItems[key].delete(idx);
+  } else {
+    expandedItems[key].add(idx);
+  }
+  renderSection();
+}
+
+function updateField(sectionKey, idx, fieldKey, value) {
+  if (idx === 'new') {
+    // Store in a temp object
+    if (!data._new) data._new = {};
+    if (!data._new[sectionKey]) data._new[sectionKey] = {};
+    data._new[sectionKey][fieldKey] = value;
+  } else {
+    const i = parseInt(idx);
+    if (!data[sectionKey]) data[sectionKey] = [];
+    if (!data[sectionKey][i]) data[sectionKey][i] = {};
+    data[sectionKey][i][fieldKey] = value;
+  }
+}
+
+function addItem(sectionKey) {
+  const schema = SECTIONS[sectionKey];
+  const newItem = {};
+  // Collect values from the "new" temp store
+  const temp = (data._new && data._new[sectionKey]) || {};
+  schema.fields.forEach(f => {
+    newItem[f.key] = temp[f.key] || f.default || '';
+  });
+
+  if (!data[sectionKey]) data[sectionKey] = [];
+  data[sectionKey].unshift(newItem);
+  addingNew[sectionKey] = false;
+  if (data._new) delete data._new[sectionKey];
+
+  // Shift expanded indices
+  if (expandedItems[sectionKey]) {
+    const shifted = new Set();
+    expandedItems[sectionKey].forEach(i => shifted.add(i + 1));
+    expandedItems[sectionKey] = shifted;
+  }
+
+  renderSection();
+  toast('Element ajoute (pensez a sauvegarder)');
+}
+
+function deleteItem(sectionKey, idx) {
+  const item = data[sectionKey][idx];
+  const title = item[SECTIONS[sectionKey].titleField] || '(sans titre)';
+  if (!confirm(`Supprimer "${title}" ?`)) return;
+
+  data[sectionKey].splice(idx, 1);
+
+  // Adjust expanded indices
+  if (expandedItems[sectionKey]) {
+    const adjusted = new Set();
+    expandedItems[sectionKey].forEach(i => {
+      if (i < idx) adjusted.add(i);
+      else if (i > idx) adjusted.add(i - 1);
+    });
+    expandedItems[sectionKey] = adjusted;
+  }
+
+  renderSection();
+  toast('Element supprime (pensez a sauvegarder)');
+}
+
+function moveItem(sectionKey, idx, direction) {
+  const arr = data[sectionKey];
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= arr.length) return;
+  [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+
+  // Adjust expanded indices
+  if (expandedItems[sectionKey]) {
+    const adjusted = new Set();
+    expandedItems[sectionKey].forEach(i => {
+      if (i === idx) adjusted.add(newIdx);
+      else if (i === newIdx) adjusted.add(idx);
+      else adjusted.add(i);
+    });
+    expandedItems[sectionKey] = adjusted;
+  }
+
+  renderSection();
+}
+
+async function saveCurrentSection() {
+  const key = currentTab;
+  const sectionData = data[key] || [];
+
+  setLoading('save-btn', true);
+  try {
+    await fbPut(`data/${key}.json`, sectionData);
+    const now = new Date();
+    lastSaved[key] = now.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    toast(`${SECTIONS[key].label} sauvegarde avec succes !`);
+    renderSection();
+  } catch(e) {
+    toast('Erreur lors de la sauvegarde.', true);
+  }
+  setLoading('save-btn', false);
+}
+
+/* ══════════════════════════════════════
+   INIT
+   ══════════════════════════════════════ */
+initAuth();
+</script>
+</body>
+</html>
