@@ -1555,6 +1555,26 @@ function resolveDate(jour) {
   return null;
 }
 
+// Timezone-aware helpers — correct CET (+01:00) AND CEST (+02:00) automatically
+function parisNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+}
+function parisDt(dateStr, minuteOfDay) {
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  return new Date(y, mo - 1, d, Math.floor(minuteOfDay / 60), minuteOfDay % 60, 0);
+}
+
+// Show notification via Service Worker (works on mobile) with fallback
+function showNotif(title, options) {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(function(reg) {
+      reg.showNotification(title, options);
+    });
+  } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    new Notification(title, options);
+  }
+}
+
 function parseTime(hStr) {
   // Parse "09h", "13h15", "09h – 10h", "18h15 – 19h15" → {start, end} in minutes
   if (!hStr) return null;
@@ -1574,11 +1594,9 @@ function getCountdown(jour, heure) {
   const parsed = parseTime(heure);
   if (!parsed) return '';
 
-  const now = new Date();
-  const evStart = new Date(dateStr + 'T00:00:00+01:00'); // France timezone CET
-  evStart.setMinutes(evStart.getMinutes() + parsed.start);
-  const evEnd = new Date(dateStr + 'T00:00:00+01:00');
-  evEnd.setMinutes(evEnd.getMinutes() + parsed.end);
+  const now = parisNow();
+  const evStart = parisDt(dateStr, parsed.start);
+  const evEnd = parisDt(dateStr, parsed.end);
 
   const diffMs = evStart - now;
   const diffMin = Math.floor(diffMs / 60000);
@@ -1750,19 +1768,17 @@ function renderNowNext() {
   const sessions = items.filter(ev => (ev.type || '').trim() !== 'meal');
   if (!sessions.length) { el.innerHTML = ''; return; }
 
-  const now = new Date();
+  const now = parisNow();
   let currentEv = null, nextEv = null;
 
-  // Build time-sorted list with Date objects
+  // Build time-sorted list with Date objects (Paris timezone)
   const withTime = sessions.map(ev => {
     const dateStr = resolveDate(ev.jour);
     if (!dateStr) return null;
     const parsed = parseTime(ev.heure);
     if (!parsed) return null;
-    const start = new Date(dateStr + 'T00:00:00+01:00');
-    start.setMinutes(start.getMinutes() + parsed.start);
-    const end = new Date(dateStr + 'T00:00:00+01:00');
-    end.setMinutes(end.getMinutes() + parsed.end);
+    const start = parisDt(dateStr, parsed.start);
+    const end = parisDt(dateStr, parsed.end);
     return { ev, start, end };
   }).filter(Boolean).sort((a, b) => a.start - b.start);
 
@@ -1820,7 +1836,7 @@ function requestNotifPermission() {
   Notification.requestPermission().then(perm => {
     document.getElementById('notifBanner').classList.remove('show');
     if (perm === 'granted') {
-      new Notification('Célébration du Dharma 2026', {
+      showNotif('Célébration du Dharma 2026', {
         body: lang === 'fr' ? 'Notifications activées ✓' : 'Notifications enabled ✓',
         icon: 'icon-192.png'
       });
@@ -1837,15 +1853,14 @@ function checkSessionNotifications() {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   const items = sheetData.programme || FALLBACK_PROGRAMME;
   const sessions = items.filter(ev => (ev.type || '').trim() !== 'meal');
-  const now = new Date();
+  const now = parisNow();
 
   for (const ev of sessions) {
     const dateStr = resolveDate(ev.jour);
     if (!dateStr) continue;
     const parsed = parseTime(ev.heure);
     if (!parsed) continue;
-    const start = new Date(dateStr + 'T00:00:00+01:00');
-    start.setMinutes(start.getMinutes() + parsed.start);
+    const start = parisDt(dateStr, parsed.start);
 
     const diffMs = start - now;
     const diffMin = Math.floor(diffMs / 60000);
@@ -1856,7 +1871,7 @@ function checkSessionNotifications() {
       notifSentKeys.push(key);
       try { localStorage.setItem('cd2026-notif-sent', JSON.stringify(notifSentKeys)); } catch(e) {}
       const title = lang === 'en' ? (ev.titre_en || ev.titre_fr) : ev.titre_fr;
-      new Notification('⏱ ' + (lang === 'fr' ? 'Dans ~10 min' : 'In ~10 min'), {
+      showNotif('⏱ ' + (lang === 'fr' ? 'Dans ~10 min' : 'In ~10 min'), {
         body: title + ' — ' + (ev.heure || ''),
         icon: 'icon-192.png',
         tag: key
