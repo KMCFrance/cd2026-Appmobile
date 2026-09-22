@@ -796,6 +796,91 @@ a:hover { text-decoration: underline; }
 }
 .notice-icon { color: var(--pink); flex-shrink: 0; margin-top: 1px; }
 
+/* ── Now / Next card ── */
+.now-next {
+  margin: 12px 14px 4px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--green-soft), var(--surface));
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.now-next-item { margin-bottom: 10px; }
+.now-next-item:last-child { margin-bottom: 0; }
+.now-next-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 3px;
+}
+.now-next-label.now { color: var(--green); }
+.now-next-label.next { color: var(--saffron); }
+.now-next-title {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+}
+.now-next-meta {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 1px;
+}
+.now-next-separator {
+  height: 1px;
+  background: var(--border-light);
+  margin: 8px 0;
+}
+
+/* ── Pull-to-refresh ── */
+.ptr-indicator {
+  position: fixed; top: 0; left: 50%;
+  transform: translateX(-50%) translateY(-50px);
+  z-index: 200;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 2px 12px var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+.ptr-indicator.visible { transform: translateX(-50%) translateY(16px); }
+.ptr-indicator.loading .ptr-arrow { display: none; }
+.ptr-indicator.loading .ptr-spin { display: block; }
+.ptr-arrow {
+  width: 18px; height: 18px;
+  color: var(--green);
+  transition: transform 0.2s;
+}
+.ptr-spin {
+  display: none;
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ── Notif permission banner ── */
+.notif-banner {
+  display: none; align-items: center; gap: 10px;
+  padding: 10px 14px; margin: 10px 14px 0;
+  background: var(--saffron-soft);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text-secondary);
+}
+.notif-banner.show { display: flex; }
+.notif-banner button {
+  padding: 5px 12px;
+  background: var(--saffron); color: #fff;
+  font-size: 12px; font-weight: 700;
+  border-radius: 16px; white-space: nowrap;
+}
+.notif-banner .nb-close {
+  background: none; color: var(--text-muted);
+  font-size: 16px; padding: 0; width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+}
+
 /* ── Loading ── */
 .loading {
   text-align: center; padding: 40px 20px;
@@ -837,6 +922,11 @@ a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+<!-- Pull-to-refresh indicator -->
+<div class="ptr-indicator" id="ptrIndicator">
+  <svg class="ptr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 14 12 9 17 14"/></svg>
+  <div class="ptr-spin"></div>
+</div>
 
 <!-- ═══════════ SPLASH SCREEN ═══════════ -->
 <div class="splash" id="splash">
@@ -936,6 +1026,12 @@ a:hover { text-decoration: underline; }
     <div class="section-head">
       <h2 data-i18n="s_prog">Programme</h2>
       <!-- subtitle removed -->
+    </div>
+    <div id="nowNextCard"></div>
+    <div class="notif-banner" id="notifBanner">
+      <span id="notifText">🔔 Recevoir un rappel 10 min avant chaque séance ?</span>
+      <button onclick="requestNotifPermission()">Activer</button>
+      <button class="nb-close" onclick="dismissNotifBanner()">✕</button>
     </div>
     <div class="day-strip" id="dayStrip"></div>
     <div class="timeline" id="timeline"></div>
@@ -1153,7 +1249,7 @@ async function loadSheetData() {
   if (!CONFIG.FIREBASE_URL) return false;
   try {
     const r = await fetch(CONFIG.FIREBASE_URL + '/data.json');
-    if (!r.ok) return false;
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     if (!data) return false;
     if (data.cafe && data.cafe.length) sheetData.cafe = data.cafe;
@@ -1164,9 +1260,26 @@ async function loadSheetData() {
     if (data.alertes) sheetData.alertes = data.alertes;
     console.log('[CD2026] Données Firebase reçues:', Object.keys(data), 'alertes:', data.alertes ? data.alertes.length + ' entrées' : 'aucune');
     sheetData.lastFetch = new Date();
+    // Cache for offline use
+    saveDataCache(data);
     return true;
   } catch (e) {
     console.warn('[CD2026] Erreur Firebase:', e);
+    // Try loading from localStorage cache
+    if (!sheetData.lastFetch) {
+      const cached = loadDataCache();
+      if (cached) {
+        console.log('[CD2026] Mode hors-ligne — données du cache');
+        if (cached.cafe && cached.cafe.length) sheetData.cafe = cached.cafe;
+        if (cached.repas && cached.repas.length) sheetData.repas = cached.repas;
+        if (cached.horaires && cached.horaires.length) sheetData.horaires = cached.horaires;
+        if (cached.programme && cached.programme.length) sheetData.programme = cached.programme;
+        if (cached.infos && cached.infos.length) sheetData.infos = cached.infos;
+        if (cached.alertes) sheetData.alertes = cached.alertes;
+        sheetData.lastFetch = new Date();
+        return true;
+      }
+    }
     return false;
   }
 }
@@ -1181,6 +1294,7 @@ function go(tab) {
   document.getElementById('sec-' + tab).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
   window.scrollTo(0, 0);
+  trackSection(tab);
 }
 
 // ── Language ──
@@ -1618,8 +1732,214 @@ function toggleRead(id, checked) {
   if (card) card.classList.toggle('read', checked);
 }
 
+/* ══════════════════════════════════════════════════════
+   EN CE MOMENT / PROCHAINEMENT
+   ══════════════════════════════════════════════════════ */
+function renderNowNext() {
+  const el = document.getElementById('nowNextCard');
+  if (!el) return;
+  const items = sheetData.programme || FALLBACK_PROGRAMME;
+  // Filter out meals
+  const sessions = items.filter(ev => (ev.type || '').trim() !== 'meal');
+  if (!sessions.length) { el.innerHTML = ''; return; }
+
+  const now = new Date();
+  let currentEv = null, nextEv = null;
+
+  // Build time-sorted list with Date objects
+  const withTime = sessions.map(ev => {
+    const dateStr = DAY_DATES[ev.jour];
+    if (!dateStr) return null;
+    const parsed = parseTime(ev.heure);
+    if (!parsed) return null;
+    const start = new Date(dateStr + 'T00:00:00+01:00');
+    start.setMinutes(start.getMinutes() + parsed.start);
+    const end = new Date(dateStr + 'T00:00:00+01:00');
+    end.setMinutes(end.getMinutes() + parsed.end);
+    return { ev, start, end };
+  }).filter(Boolean).sort((a, b) => a.start - b.start);
+
+  for (const s of withTime) {
+    if (s.start <= now && s.end > now) { currentEv = s; }
+    if (s.start > now && !nextEv) { nextEv = s; }
+  }
+
+  if (!currentEv && !nextEv) { el.innerHTML = ''; return; }
+
+  function evHTML(s, type) {
+    const title = lang === 'en' ? (s.ev.titre_en || s.ev.titre_fr) : s.ev.titre_fr;
+    const label = type === 'now'
+      ? (lang === 'fr' ? '● En ce moment' : '● Happening now')
+      : (lang === 'fr' ? '↗ Prochainement' : '↗ Coming up');
+    const meta = s.ev.heure || '';
+    const dayLabel = t(DAY_LABELS[s.ev.jour] || { fr: s.ev.jour, en: s.ev.jour });
+    return '<div class="now-next-item"><div class="now-next-label ' + type + '">' + label + '</div>' +
+      '<div class="now-next-title">' + title + '</div>' +
+      '<div class="now-next-meta">' + dayLabel + ' · ' + meta + '</div></div>';
+  }
+
+  let html = '<div class="now-next">';
+  if (currentEv) html += evHTML(currentEv, 'now');
+  if (currentEv && nextEv) html += '<div class="now-next-separator"></div>';
+  if (nextEv) html += evHTML(nextEv, 'next');
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════
+   NOTIFICATIONS — rappel 10 min avant chaque séance
+   ══════════════════════════════════════════════════════ */
+let notifSentKeys = [];
+try { notifSentKeys = JSON.parse(localStorage.getItem('cd2026-notif-sent') || '[]'); } catch(e) {}
+
+function showNotifBanner() {
+  if (typeof Notification === 'undefined') return; // not supported
+  if (Notification.permission === 'granted' || Notification.permission === 'denied') return;
+  try { if (localStorage.getItem('cd2026-notif-dismiss')) return; } catch(e) {}
+
+  const banner = document.getElementById('notifBanner');
+  const text = document.getElementById('notifText');
+  if (banner) {
+    text.textContent = lang === 'fr'
+      ? '🔔 Recevoir un rappel 10 min avant chaque séance ?'
+      : '🔔 Get a reminder 10 min before each session?';
+    document.querySelector('#notifBanner button:not(.nb-close)').textContent = lang === 'fr' ? 'Activer' : 'Enable';
+    banner.classList.add('show');
+  }
+}
+
+function requestNotifPermission() {
+  if (typeof Notification === 'undefined') return;
+  Notification.requestPermission().then(perm => {
+    document.getElementById('notifBanner').classList.remove('show');
+    if (perm === 'granted') {
+      new Notification('Célébration du Dharma 2026', {
+        body: lang === 'fr' ? 'Notifications activées ✓' : 'Notifications enabled ✓',
+        icon: 'icon-192.png'
+      });
+    }
+  });
+}
+
+function dismissNotifBanner() {
+  document.getElementById('notifBanner').classList.remove('show');
+  try { localStorage.setItem('cd2026-notif-dismiss', '1'); } catch(e) {}
+}
+
+function checkSessionNotifications() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const items = sheetData.programme || FALLBACK_PROGRAMME;
+  const sessions = items.filter(ev => (ev.type || '').trim() !== 'meal');
+  const now = new Date();
+
+  for (const ev of sessions) {
+    const dateStr = DAY_DATES[ev.jour];
+    if (!dateStr) continue;
+    const parsed = parseTime(ev.heure);
+    if (!parsed) continue;
+    const start = new Date(dateStr + 'T00:00:00+01:00');
+    start.setMinutes(start.getMinutes() + parsed.start);
+
+    const diffMs = start - now;
+    const diffMin = Math.floor(diffMs / 60000);
+    const key = ev.jour + '-' + (ev.titre_fr || '') + '-' + parsed.start;
+
+    // Notify between 8 and 12 min before (window to account for 30s check interval)
+    if (diffMin >= 8 && diffMin <= 12 && !notifSentKeys.includes(key)) {
+      notifSentKeys.push(key);
+      try { localStorage.setItem('cd2026-notif-sent', JSON.stringify(notifSentKeys)); } catch(e) {}
+      const title = lang === 'en' ? (ev.titre_en || ev.titre_fr) : ev.titre_fr;
+      new Notification('⏱ ' + (lang === 'fr' ? 'Dans ~10 min' : 'In ~10 min'), {
+        body: title + ' — ' + (ev.heure || ''),
+        icon: 'icon-192.png',
+        tag: key
+      });
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   MODE HORS-LIGNE AMÉLIORÉ — cache localStorage
+   ══════════════════════════════════════════════════════ */
+function saveDataCache(data) {
+  try {
+    localStorage.setItem('cd2026-data-cache', JSON.stringify(data));
+    localStorage.setItem('cd2026-data-cache-ts', Date.now().toString());
+  } catch(e) { /* quota exceeded — ignore */ }
+}
+
+function loadDataCache() {
+  try {
+    const raw = localStorage.getItem('cd2026-data-cache');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+/* ══════════════════════════════════════════════════════
+   PULL-TO-REFRESH
+   ══════════════════════════════════════════════════════ */
+(function initPullToRefresh() {
+  let startY = 0, pulling = false;
+  const indicator = document.getElementById('ptrIndicator');
+  if (!indicator) return;
+
+  document.addEventListener('touchstart', function(e) {
+    if (window.scrollY === 0 && e.touches.length === 1) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 40 && window.scrollY === 0) {
+      indicator.classList.add('visible');
+    } else {
+      indicator.classList.remove('visible');
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', async function() {
+    if (!pulling) return;
+    pulling = false;
+    if (indicator.classList.contains('visible')) {
+      indicator.classList.remove('visible');
+      indicator.classList.add('visible', 'loading');
+      const ok = await loadSheetData();
+      if (ok) renderAll();
+      setTimeout(() => indicator.classList.remove('visible', 'loading'), 600);
+    }
+  });
+})();
+
+/* ══════════════════════════════════════════════════════
+   ANALYTICS — compteurs anonymes dans Firebase
+   ══════════════════════════════════════════════════════ */
+function trackVisit() {
+  if (!CONFIG.FIREBASE_URL) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const url = CONFIG.FIREBASE_URL + '/analytics/visits/' + today + '.json';
+  // Atomic increment via transaction: read then write
+  fetch(url).then(r => r.json()).then(val => {
+    const count = (val || 0) + 1;
+    fetch(url, { method: 'PUT', body: JSON.stringify(count) }).catch(() => {});
+  }).catch(() => {});
+}
+
+function trackSection(section) {
+  if (!CONFIG.FIREBASE_URL) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const url = CONFIG.FIREBASE_URL + '/analytics/sections/' + today + '/' + section + '.json';
+  fetch(url).then(r => r.json()).then(val => {
+    fetch(url, { method: 'PUT', body: JSON.stringify((val || 0) + 1) }).catch(() => {});
+  }).catch(() => {});
+}
+
 function renderAll() {
   renderSchedule();
+  renderNowNext();
   renderCafe();
   renderBoutique();
   renderMeals();
@@ -1642,6 +1962,18 @@ function renderAll() {
     splash.insertBefore(img, splash.firstChild);
   }
 
+  // Load cached data first for instant render
+  const cached = loadDataCache();
+  if (cached) {
+    if (cached.cafe && cached.cafe.length) sheetData.cafe = cached.cafe;
+    if (cached.repas && cached.repas.length) sheetData.repas = cached.repas;
+    if (cached.horaires && cached.horaires.length) sheetData.horaires = cached.horaires;
+    if (cached.programme && cached.programme.length) sheetData.programme = cached.programme;
+    if (cached.infos && cached.infos.length) sheetData.infos = cached.infos;
+    if (cached.alertes) sheetData.alertes = cached.alertes;
+    console.log('[CD2026] Données du cache chargées');
+  }
+
   renderAll();
   const loaded = await loadSheetData();
   if (loaded) renderAll();
@@ -1657,6 +1989,12 @@ function renderAll() {
   // Show alert popups AFTER splash has disappeared
   setTimeout(() => checkAlerts(), 900);
 
+  // Show notification banner after 3s
+  setTimeout(() => showNotifBanner(), 3000);
+
+  // Track anonymous visit
+  trackVisit();
+
   if (CONFIG.FIREBASE_URL && CONFIG.REFRESH_MS > 0) {
     setInterval(async () => {
       const ok = await loadSheetData();
@@ -1664,8 +2002,12 @@ function renderAll() {
     }, CONFIG.REFRESH_MS);
   }
 
-  // Refresh countdowns every 30s
-  setInterval(() => renderSchedule(), 30000);
+  // Refresh countdowns + now/next every 30s, check notifications
+  setInterval(() => {
+    renderSchedule();
+    renderNowNext();
+    checkSessionNotifications();
+  }, 30000);
 })();
 
 // Register Service Worker for PWA
