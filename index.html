@@ -874,6 +874,10 @@ a:hover { text-decoration: underline; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
     <span class="nav-label" data-i18n="n_cafe">Café</span>
   </button>
+  <button class="nav-item" data-tab="boutique" onclick="go('boutique')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <span class="nav-label" data-i18n="n_boutique">Boutique</span>
+  </button>
   <button class="nav-item" data-tab="repas" onclick="go('repas')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
     <span class="nav-label" data-i18n="n_repas">Repas</span>
@@ -931,19 +935,30 @@ a:hover { text-decoration: underline; }
   <div class="section active" id="sec-programme">
     <div class="section-head">
       <h2 data-i18n="s_prog">Programme</h2>
-      <p data-i18n="s_prog_sub">Enseignements avec Guèn Kelsang Eupamé</p>
+      <!-- subtitle removed -->
     </div>
     <div class="day-strip" id="dayStrip"></div>
     <div class="timeline" id="timeline"></div>
   </div>
 
-  <!-- Café & Boutique -->
+  <!-- World Peace Café -->
   <div class="section" id="sec-cafe">
     <div class="section-head">
-      <h2 data-i18n="s_cafe">Café & Boutique</h2>
-      <p data-i18n="s_cafe_sub">World Peace Café · Boutique du Dharma</p>
+      <h2 data-i18n="s_cafe">World Peace Café</h2>
     </div>
+    <div class="day-strip" id="cafeDayStrip"></div>
     <div class="section-body" id="cafeBody">
+      <div class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
+    </div>
+  </div>
+
+  <!-- Boutique -->
+  <div class="section" id="sec-boutique">
+    <div class="section-head">
+      <h2 data-i18n="s_boutique">Boutique du Dharma</h2>
+    </div>
+    <div class="day-strip" id="boutiqueDayStrip"></div>
+    <div class="section-body" id="boutiqueBody">
       <div class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
     </div>
   </div>
@@ -952,7 +967,7 @@ a:hover { text-decoration: underline; }
   <div class="section" id="sec-repas">
     <div class="section-head">
       <h2 data-i18n="s_repas">Repas</h2>
-      <p data-i18n="s_repas_sub">Cuisine 100 % végétarienne</p>
+      <!-- subtitle removed -->
     </div>
     <div class="day-strip" id="mealDayStrip"></div>
     <div class="section-body" id="mealsBody">
@@ -993,20 +1008,21 @@ const I18N = {
   hero_subtitle: { fr: 'Changer son esprit, changer sa vie', en: 'Change your mind, change your life' },
   hero_meta:     { fr: '27 – 30 novembre · Château de Segrais', en: '27 – 30 November · Château de Segrais' },
   s_prog:        { fr: 'Programme', en: 'Schedule' },
-  s_prog_sub:    { fr: 'Enseignements avec Guèn Kelsang Eupamé', en: 'Teachings with Gen Kelsang Eupame' },
-  s_cafe:        { fr: 'Café & Boutique', en: 'Café & Shop' },
-  s_cafe_sub:    { fr: 'World Peace Café · Boutique du Dharma', en: 'World Peace Café · Dharma Shop' },
+  // s_prog_sub removed
+  s_cafe:        { fr: 'World Peace Café', en: 'World Peace Café' },
+  s_boutique:    { fr: 'Boutique du Dharma', en: 'Dharma Shop' },
   s_repas:       { fr: 'Repas', en: 'Meals' },
-  s_repas_sub:   { fr: 'Cuisine 100 % végétarienne', en: '100% vegetarian cuisine' },
+  // s_repas_sub removed
   s_info:        { fr: 'Infos pratiques', en: 'Practical info' },
   s_info_sub:    { fr: 'Tout pour votre séjour', en: 'Everything for your stay' },
   n_prog:        { fr: 'Programme', en: 'Schedule' },
   n_cafe:        { fr: 'Café', en: 'Café' },
+  n_boutique:    { fr: 'Boutique', en: 'Shop' },
   n_repas:       { fr: 'Repas', en: 'Meals' },
   n_info:        { fr: 'Infos', en: 'Info' },
-  meals_notice:  { fr: 'Les menus sont mis à jour chaque jour. Tous les repas sont végétariens avec une option végan sans gluten sur demande.', en: 'Menus are updated daily. All meals are vegetarian with a vegan gluten-free option on request.' },
+  // meals_notice removed
   cafe_note:     { fr: 'Tous les bénéfices soutiennent le Centre de Méditation Kadampa France.', en: 'All proceeds support the Kadampa Meditation Centre France.' },
-  boutique_hrs:  { fr: 'Mêmes horaires que le café', en: 'Same hours as the café' },
+  voir_carte:    { fr: 'Voir la carte', en: 'See menu' },
   boutique_pay:  { fr: 'Paiement par carte ou espèces.', en: 'Payment by card or cash.' },
   last_update:   { fr: 'Dernière mise à jour :', en: 'Last update:' },
   no_sheet:      { fr: 'Données de démonstration — connectez Firebase pour les mises à jour en temps réel.', en: 'Demo data — connect Firebase for real-time updates.' },
@@ -1123,6 +1139,8 @@ const DAY_LABELS = {
 let lang = 'fr';
 let activeDay = 'ven-27';
 let activeMealDay = 'ven-27';
+let activeCafeDay = '__carte__';
+let activeBoutiqueDay = 'ven-27';
 let sheetData = { cafe: null, repas: null, horaires: null, programme: null, infos: null, alertes: null, lastFetch: null };
 
 const t = (o) => o ? (o[lang] || o.fr || '') : '';
@@ -1184,6 +1202,8 @@ function renderDays(containerId, dayKeys, active, fn) {
 }
 function selectDay(k) { activeDay = k; renderSchedule(); }
 function selectMealDay(k) { activeMealDay = k; renderMeals(); }
+function selectCafeDay(k) { activeCafeDay = k; renderCafe(); }
+function selectBoutiqueDay(k) { activeBoutiqueDay = k; renderBoutique(); }
 
 // ── Schedule (from Sheet or fallback) ──
 function renderSchedule() {
@@ -1204,6 +1224,7 @@ function renderSchedule() {
     const title = lang === 'en' ? (ev.titre_en || ev.titre_fr) : ev.titre_fr;
     const desc = lang === 'en' ? (ev.desc_en || ev.desc_fr || '') : (ev.desc_fr || '');
     const badge = lang === 'en' ? (ev.badge_en || ev.badge_fr || '') : (ev.badge_fr || '');
+    const sadhana = lang === 'en' ? (ev.sadhana_en || ev.sadhana_fr || '') : (ev.sadhana_fr || '');
     const cd = getCountdown(ev.jour, ev.heure);
 
     return '<div class="tl-event"><div class="tl-spine"><div class="tl-dot ' + evType + '"></div><div class="tl-line"></div></div>' +
@@ -1211,48 +1232,115 @@ function renderSchedule() {
       '<div class="tl-time">' + (ev.heure || '') + '</div>' +
       '<div class="tl-title">' + title + '</div>' +
       (desc ? '<div class="tl-desc">' + desc + '</div>' : '') +
+      (sadhana ? '<div class="tl-desc" style="margin-top:4px;font-style:italic;color:var(--green)">📖 ' + (lang === 'fr' ? 'Sadhana : ' : 'Sadhana: ') + sadhana + '</div>' : '') +
       (badge ? '<span class="tl-badge">' + badge + '</span>' : '') +
       (cd ? cd : '') +
       '</div></div>';
   }).join('');
 }
 
-// ── Café ──
+// ── Café (World Peace Café) ──
 function renderCafe() {
   const items = sheetData.cafe || FALLBACK_CAFE;
   const hours = (sheetData.horaires || FALLBACK_HORAIRES).filter(r => r.lieu === 'cafe' || !r.lieu || r.lieu === '');
 
-  // Group by category
-  const cats = {};
-  items.forEach(it => {
-    const cat = lang === 'en' ? (it.categorie_en || it.categorie_fr) : it.categorie_fr;
-    if (!cats[cat]) cats[cat] = [];
-    cats[cat].push(it);
+  // Build day keys from hours data for café tabs
+  const dayOrder = ['ven-27','sam-28','dim-29','lun-30'];
+  // Map hour entries to day keys
+  const cafeDayMap = {};
+  hours.forEach(h => {
+    const jourFr = h.jour_fr || '';
+    // Try to match day key from label
+    for (const dk of dayOrder) {
+      const lbl = DAY_LABELS[dk];
+      if (lbl && (jourFr.toLowerCase().includes(lbl.fr.toLowerCase().replace('.','')) || jourFr.toLowerCase().includes(dk.split('-')[0]))) {
+        cafeDayMap[dk] = h;
+        break;
+      }
+    }
   });
+  const cafeDays = dayOrder.filter(d => cafeDayMap[d]);
 
-  const hoursHtml = hours.map(h =>
-    '<div class="hours-row"><span class="hours-day">' + (lang === 'en' ? (h.jour_en||h.jour_fr) : h.jour_fr) + '</span><span class="hours-time">' + h.ouverture + ' – ' + h.fermeture + '</span></div>'
-  ).join('');
+  // Add "Voir la carte" as special tab
+  const allTabs = [...cafeDays, '__carte__'];
+  if (!allTabs.includes(activeCafeDay)) activeCafeDay = cafeDays.length ? cafeDays[0] : '__carte__';
 
-  const menuHtml = Object.entries(cats).map(([cat, its]) =>
-    '<div class="menu-cat"><div class="menu-cat-label">' + cat + '</div>' +
-    its.map(it => '<div class="menu-row"><span class="menu-name">' + (lang === 'en' ? (it.nom_en||it.nom_fr) : it.nom_fr) + '</span><span class="menu-price">' + (it.prix||'') + '</span></div>').join('') +
-    '</div>'
-  ).join('');
+  // Render tabs
+  const carteLabel = t(I18N.voir_carte);
+  document.getElementById('cafeDayStrip').innerHTML = allTabs.map(k => {
+    const label = k === '__carte__' ? ('🍽 ' + carteLabel) : t(DAY_LABELS[k] || {fr:k,en:k});
+    return '<button class="day-pill' + (k === activeCafeDay ? ' active' : '') + '" onclick="selectCafeDay(\'' + k + '\')">' + label + '</button>';
+  }).join('');
 
-  const boutiqueHtml = BOUTIQUE_ITEMS.map(it => '<div style="padding:5px 0;font-size:14px;color:var(--text)">· ' + t(it) + '</div>').join('');
+  const body = document.getElementById('cafeBody');
 
-  const statusHtml = !CONFIG.FIREBASE_URL
-    ? '<div class="notice"><span class="notice-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span><span>' + t(I18N.no_sheet) + '</span></div>'
-    : (sheetData.lastFetch ? '<div class="sheet-status">' + t(I18N.last_update) + ' ' + sheetData.lastFetch.toLocaleTimeString(lang === 'fr' ? 'fr-FR' : 'en-GB') + '</div>' : '');
+  if (activeCafeDay === '__carte__') {
+    // Show menu (carte)
+    const cats = {};
+    items.forEach(it => {
+      const cat = lang === 'en' ? (it.categorie_en || it.categorie_fr) : it.categorie_fr;
+      if (!cats[cat]) cats[cat] = [];
+      cats[cat].push(it);
+    });
+    const menuHtml = Object.entries(cats).map(([cat, its]) =>
+      '<div class="menu-cat"><div class="menu-cat-label">' + cat + '</div>' +
+      its.map(it => '<div class="menu-row"><span class="menu-name">' + (lang === 'en' ? (it.nom_en||it.nom_fr) : it.nom_fr) + '</span><span class="menu-price">' + (it.prix||'') + '</span></div>').join('') +
+      '</div>'
+    ).join('');
+    body.innerHTML = '<div class="card"><div class="card-header"><div class="card-icon cafe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg></div><div><div class="card-title">World Peace Café</div></div></div>' +
+      menuHtml +
+      '<div class="menu-note">' + t(I18N.cafe_note) + '</div></div>';
+  } else {
+    // Show hours for selected day
+    const h = cafeDayMap[activeCafeDay];
+    if (h) {
+      const dayLabel = lang === 'en' ? (h.jour_en||h.jour_fr) : h.jour_fr;
+      body.innerHTML = '<div class="card"><div class="card-header"><div class="card-icon cafe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg></div><div><div class="card-title">World Peace Café</div></div></div>' +
+        '<div class="hours-row"><span class="hours-day">' + dayLabel + '</span><span class="hours-time">' + h.ouverture + ' – ' + h.fermeture + '</span></div>' +
+        '<div class="menu-note">' + t(I18N.cafe_note) + '</div></div>';
+    } else {
+      body.innerHTML = '<div class="card"><p style="color:var(--text-muted);text-align:center;padding:20px">' + (lang === 'fr' ? 'Horaires non disponibles pour ce jour' : 'Hours not available for this day') + '</p></div>';
+    }
+  }
+}
 
-  document.getElementById('cafeBody').innerHTML = statusHtml +
-    '<div class="card"><div class="card-header"><div class="card-icon cafe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg></div><div><div class="card-title">World Peace Café</div></div></div>' +
-    hoursHtml + menuHtml +
-    '<div class="menu-note">' + t(I18N.cafe_note) + '</div></div>' +
-    '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique du Dharma',en:'Dharma Shop'}) + '</div><div class="card-sub">' + t(I18N.boutique_hrs) + '</div></div></div>' +
-    boutiqueHtml +
-    '<div class="menu-note">' + t(I18N.boutique_pay) + '</div></div>';
+// ── Boutique ──
+function renderBoutique() {
+  const hours = (sheetData.horaires || FALLBACK_HORAIRES).filter(r => r.lieu === 'shop');
+
+  // Build day keys from hours data
+  const dayOrder = ['ven-27','sam-28','dim-29','lun-30'];
+  const boutiqueDayMap = {};
+  hours.forEach(h => {
+    const jourFr = h.jour_fr || '';
+    for (const dk of dayOrder) {
+      const lbl = DAY_LABELS[dk];
+      if (lbl && (jourFr.toLowerCase().includes(lbl.fr.toLowerCase().replace('.','')) || jourFr.toLowerCase().includes(dk.split('-')[0]))) {
+        boutiqueDayMap[dk] = h;
+        break;
+      }
+    }
+  });
+  const boutiqueDays = dayOrder.filter(d => boutiqueDayMap[d]);
+
+  if (boutiqueDays.length) {
+    if (!boutiqueDays.includes(activeBoutiqueDay)) activeBoutiqueDay = boutiqueDays[0];
+    renderDays('boutiqueDayStrip', boutiqueDays, activeBoutiqueDay, 'selectBoutiqueDay');
+
+    const h = boutiqueDayMap[activeBoutiqueDay];
+    const dayLabel = h ? (lang === 'en' ? (h.jour_en||h.jour_fr) : h.jour_fr) : '';
+    document.getElementById('boutiqueBody').innerHTML = h
+      ? '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique du Dharma',en:'Dharma Shop'}) + '</div></div></div>' +
+        '<div class="hours-row"><span class="hours-day">' + dayLabel + '</span><span class="hours-time">' + h.ouverture + ' – ' + h.fermeture + '</span></div>' +
+        '<div class="menu-note">' + t(I18N.boutique_pay) + '</div></div>'
+      : '';
+  } else {
+    // No boutique hours available yet — show placeholder
+    document.getElementById('boutiqueDayStrip').innerHTML = '';
+    document.getElementById('boutiqueBody').innerHTML = '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique du Dharma',en:'Dharma Shop'}) + '</div></div></div>' +
+      '<p style="color:var(--text-muted);font-size:14px;padding:4px 0">' + (lang === 'fr' ? 'Horaires à venir prochainement' : 'Hours coming soon') + '</p>' +
+      '<div class="menu-note">' + t(I18N.boutique_pay) + '</div></div>';
+  }
 }
 
 // ── Meals ──
@@ -1282,7 +1370,6 @@ function renderMeals() {
 
   const body = document.getElementById('mealsBody');
   body.innerHTML =
-    '<div class="notice"><span class="notice-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span><span>' + t(I18N.meals_notice) + '</span></div>' +
     Object.values(services).map(s =>
       '<div class="card"><div class="meal-service"><div class="meal-svc-title">' + s.name + '</div>' +
       '<div class="meal-svc-time">' + s.time + '</div>' +
@@ -1300,7 +1387,32 @@ function renderMeals() {
 // ── Infos (from Sheet or fallback) ──
 function renderInfos() {
   const items = sheetData.infos || FALLBACK_INFOS;
-  document.getElementById('infosBody').innerHTML = items.map(sec => {
+
+  // PWA install guide — hardcoded
+  const installGuide = {
+    titre_fr: "Installer l'application",
+    titre_en: 'Install the app',
+    contenu_fr:
+      '<p style="margin-bottom:12px">Cette application web peut être installée sur votre téléphone ou ordinateur pour un accès rapide, même sans connexion internet.</p>' +
+      '<strong>📱 iPhone / iPad (Safari)</strong>' +
+      '<ol style="margin:6px 0 14px 18px;line-height:1.7"><li>Ouvrez cette page dans <strong>Safari</strong></li><li>Appuyez sur l\'icône <strong>Partager</strong> (⎙) en bas de l\'écran</li><li>Faites défiler et appuyez sur <strong>« Sur l\'écran d\'accueil »</strong></li><li>Appuyez sur <strong>Ajouter</strong></li></ol>' +
+      '<strong>📱 Android (Chrome)</strong>' +
+      '<ol style="margin:6px 0 14px 18px;line-height:1.7"><li>Ouvrez cette page dans <strong>Chrome</strong></li><li>Appuyez sur le menu <strong>⋮</strong> (trois points) en haut à droite</li><li>Appuyez sur <strong>« Ajouter à l\'écran d\'accueil »</strong></li><li>Confirmez en appuyant sur <strong>Ajouter</strong></li></ol>' +
+      '<strong>💻 Ordinateur (Chrome / Edge)</strong>' +
+      '<ol style="margin:6px 0 4px 18px;line-height:1.7"><li>Cliquez sur l\'icône d\'installation dans la barre d\'adresse (📥) ou allez dans le menu → <strong>Installer l\'application</strong></li></ol>',
+    contenu_en:
+      '<p style="margin-bottom:12px">This web app can be installed on your phone or computer for quick access, even without an internet connection.</p>' +
+      '<strong>📱 iPhone / iPad (Safari)</strong>' +
+      '<ol style="margin:6px 0 14px 18px;line-height:1.7"><li>Open this page in <strong>Safari</strong></li><li>Tap the <strong>Share</strong> icon (⎙) at the bottom</li><li>Scroll down and tap <strong>"Add to Home Screen"</strong></li><li>Tap <strong>Add</strong></li></ol>' +
+      '<strong>📱 Android (Chrome)</strong>' +
+      '<ol style="margin:6px 0 14px 18px;line-height:1.7"><li>Open this page in <strong>Chrome</strong></li><li>Tap the <strong>⋮</strong> menu (three dots) at the top right</li><li>Tap <strong>"Add to Home Screen"</strong></li><li>Confirm by tapping <strong>Add</strong></li></ol>' +
+      '<strong>💻 Desktop (Chrome / Edge)</strong>' +
+      '<ol style="margin:6px 0 4px 18px;line-height:1.7"><li>Click the install icon in the address bar (📥) or go to menu → <strong>Install app</strong></li></ol>'
+  };
+
+  const allItems = [...items, installGuide];
+
+  document.getElementById('infosBody').innerHTML = allItems.map(sec => {
     const title = lang === 'en' ? (sec.titre_en || sec.titre_fr) : sec.titre_fr;
     const content = lang === 'en' ? (sec.contenu_en || sec.contenu_fr) : sec.contenu_fr;
     return '<div class="accordion"><button class="acc-trigger" aria-expanded="false" onclick="toggleAcc(this)"><span>' + title + '</span>' +
@@ -1382,29 +1494,34 @@ let popupShown = false; // Have we shown popups this session?
 let readAlerts = [];
 try { readAlerts = JSON.parse(localStorage.getItem('cd2026-alerts-read') || '[]'); } catch(e) {}
 
-function checkAlerts() {
+function updateAlertBell() {
   const alertes = sheetData.alertes;
   if (!alertes || !alertes.length) {
     document.getElementById('navBell').style.display = 'none';
     return;
   }
-
   const active = alertes.filter(a => a.actif && a.actif.toLowerCase() === 'oui');
   if (!active.length) {
     document.getElementById('navBell').style.display = 'none';
     return;
   }
-
-  // Show bell with unread count
   document.getElementById('navBell').style.display = '';
   const unread = active.filter(a => !readAlerts.includes(a.id || a.titre_fr)).length;
   document.getElementById('bellBadge').textContent = unread > 0 ? unread : '';
+}
 
-  // Show popups (once per session, all active alerts in sequence)
+function checkAlerts() {
+  updateAlertBell();
+  const alertes = sheetData.alertes;
+  if (!alertes || !alertes.length) return;
+  const active = alertes.filter(a => a.actif && a.actif.toLowerCase() === 'oui');
+  if (!active.length) return;
+
+  // Show popups (once per session, only unread alerts)
   if (!popupShown) {
     popupShown = true;
-    popupQueue = [...active];
-    showNextPopup();
+    popupQueue = active.filter(a => !readAlerts.includes(a.id || a.titre_fr));
+    if (popupQueue.length) showNextPopup();
   }
 }
 
@@ -1504,9 +1621,10 @@ function toggleRead(id, checked) {
 function renderAll() {
   renderSchedule();
   renderCafe();
+  renderBoutique();
   renderMeals();
   renderInfos();
-  checkAlerts();
+  updateAlertBell(); // update bell badge on refresh, popups handled separately after splash
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1535,6 +1653,9 @@ function renderAll() {
     splash.classList.add('hide');
     setTimeout(() => splash.remove(), 700);
   }
+
+  // Show alert popups AFTER splash has disappeared
+  setTimeout(() => checkAlerts(), 900);
 
   if (CONFIG.FIREBASE_URL && CONFIG.REFRESH_MS > 0) {
     setInterval(async () => {
