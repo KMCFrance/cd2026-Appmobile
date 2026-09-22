@@ -1,13 +1,15 @@
 {
-  "name": "Celebration du Dharma 2026",
+  "name": "Célébration du Dharma 2026",
   "short_name": "CD 2026",
-  "description": "Programme, repas, cafe & infos — Celebration du Dharma 2026",
-  "start_url": "./index.html",
+  "description": "Programme, repas, café & infos — Célébration du Dharma 2026",
+  "start_url": ".",
+  "scope": ".",
   "id": "cd2026-app",
   "display": "standalone",
   "background_color": "#D14E72",
   "theme_color": "#D14E72",
   "orientation": "portrait",
+  "categories": ["lifestyle"],
   "icons": [
     {
       "src": "icon-192.png",
