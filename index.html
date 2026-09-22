@@ -1566,9 +1566,12 @@ function parisDt(dateStr, minuteOfDay) {
 
 // Show notification via Service Worker (works on mobile) with fallback
 function showNotif(title, options) {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+  if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then(function(reg) {
-      reg.showNotification(title, options);
+      return reg.showNotification(title, options);
+    }).catch(function() {
+      // SW fallback
+      try { new Notification(title, options); } catch(e) {}
     });
   } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     new Notification(title, options);
@@ -1850,7 +1853,10 @@ function dismissNotifBanner() {
 }
 
 function checkSessionNotifications() {
-  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+    console.log('[Notif] Permission:', typeof Notification !== 'undefined' ? Notification.permission : 'API indisponible');
+    return;
+  }
   const items = sheetData.programme || FALLBACK_PROGRAMME;
   const sessions = items.filter(ev => (ev.type || '').trim() !== 'meal');
   const now = parisNow();
@@ -1865,6 +1871,8 @@ function checkSessionNotifications() {
     const diffMs = start - now;
     const diffMin = Math.floor(diffMs / 60000);
     const key = ev.jour + '-' + (ev.titre_fr || '') + '-' + parsed.start;
+
+    console.log('[Notif] ' + (ev.titre_fr||'?') + ' → dans ' + diffMin + ' min (fenêtre: 8-12) key=' + key + ' déjà envoyé=' + notifSentKeys.includes(key));
 
     // Notify between 8 and 12 min before (window to account for 30s check interval)
     if (diffMin >= 8 && diffMin <= 12 && !notifSentKeys.includes(key)) {
@@ -2032,9 +2040,13 @@ function renderAll() {
   }, 30000);
 })();
 
-// Register Service Worker for PWA
+// Register Service Worker for PWA — MUST be early so notifications work
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').then(function() {
+    console.log('[CD2026] Service Worker enregistré');
+  }).catch(function(e) {
+    console.warn('[CD2026] SW registration failed:', e);
+  });
 }
 
 /* ══════════════════════════════════════════════════════
