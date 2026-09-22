@@ -1397,6 +1397,10 @@ async function clearTestSessions() {
 /* ══════════════════════════════════════
    INIT
    ══════════════════════════════════════ */
+// Register Service Worker (needed for notifications on mobile)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 initAuth();
 </script>
 </body>
