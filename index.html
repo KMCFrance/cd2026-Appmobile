@@ -859,28 +859,6 @@ a:hover { text-decoration: underline; }
   animation: spin 0.6s linear infinite;
 }
 
-/* ── Notif permission banner ── */
-.notif-banner {
-  display: none; align-items: center; gap: 10px;
-  padding: 10px 14px; margin: 10px 14px 0;
-  background: var(--saffron-soft);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  font-size: 13px; color: var(--text-secondary);
-}
-.notif-banner.show { display: flex; }
-.notif-banner button {
-  padding: 5px 12px;
-  background: var(--saffron); color: #fff;
-  font-size: 12px; font-weight: 700;
-  border-radius: 16px; white-space: nowrap;
-}
-.notif-banner .nb-close {
-  background: none; color: var(--text-muted);
-  font-size: 16px; padding: 0; width: 24px; height: 24px;
-  display: flex; align-items: center; justify-content: center;
-}
-
 /* ── Loading ── */
 .loading {
   text-align: center; padding: 40px 20px;
@@ -1028,11 +1006,6 @@ a:hover { text-decoration: underline; }
       <!-- subtitle removed -->
     </div>
     <div id="nowNextCard"></div>
-    <div class="notif-banner" id="notifBanner">
-      <span id="notifText">🔔 Recevoir un rappel 10 min avant chaque séance ?</span>
-      <button onclick="requestNotifPermission()">Activer</button>
-      <button class="nb-close" onclick="dismissNotifBanner()">✕</button>
-    </div>
     <div class="day-strip" id="dayStrip"></div>
     <div class="timeline" id="timeline"></div>
   </div>
@@ -1564,19 +1537,6 @@ function parisDt(dateStr, minuteOfDay) {
   return new Date(y, mo - 1, d, Math.floor(minuteOfDay / 60), minuteOfDay % 60, 0);
 }
 
-// Show notification via Service Worker (works on mobile) with fallback
-function showNotif(title, options) {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready.then(function(reg) {
-      return reg.showNotification(title, options);
-    }).catch(function() {
-      // SW fallback
-      try { new Notification(title, options); } catch(e) {}
-    });
-  } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-    new Notification(title, options);
-  }
-}
 
 function parseTime(hStr) {
   // Parse "09h", "13h15", "09h – 10h", "18h15 – 19h15" → {start, end} in minutes
@@ -1813,82 +1773,6 @@ function renderNowNext() {
 }
 
 /* ══════════════════════════════════════════════════════
-   NOTIFICATIONS — rappel 10 min avant chaque séance
-   ══════════════════════════════════════════════════════ */
-let notifSentKeys = [];
-try { notifSentKeys = JSON.parse(localStorage.getItem('cd2026-notif-sent') || '[]'); } catch(e) {}
-
-function showNotifBanner() {
-  if (typeof Notification === 'undefined') return; // not supported
-  if (Notification.permission === 'granted' || Notification.permission === 'denied') return;
-  try { if (localStorage.getItem('cd2026-notif-dismiss')) return; } catch(e) {}
-
-  const banner = document.getElementById('notifBanner');
-  const text = document.getElementById('notifText');
-  if (banner) {
-    text.textContent = lang === 'fr'
-      ? '🔔 Recevoir un rappel 10 min avant chaque séance ?'
-      : '🔔 Get a reminder 10 min before each session?';
-    document.querySelector('#notifBanner button:not(.nb-close)').textContent = lang === 'fr' ? 'Activer' : 'Enable';
-    banner.classList.add('show');
-  }
-}
-
-function requestNotifPermission() {
-  if (typeof Notification === 'undefined') return;
-  Notification.requestPermission().then(perm => {
-    document.getElementById('notifBanner').classList.remove('show');
-    if (perm === 'granted') {
-      showNotif('Célébration du Dharma 2026', {
-        body: lang === 'fr' ? 'Notifications activées ✓' : 'Notifications enabled ✓',
-        icon: 'icon-192.png'
-      });
-    }
-  });
-}
-
-function dismissNotifBanner() {
-  document.getElementById('notifBanner').classList.remove('show');
-  try { localStorage.setItem('cd2026-notif-dismiss', '1'); } catch(e) {}
-}
-
-function checkSessionNotifications() {
-  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
-    console.log('[Notif] Permission:', typeof Notification !== 'undefined' ? Notification.permission : 'API indisponible');
-    return;
-  }
-  const items = sheetData.programme || FALLBACK_PROGRAMME;
-  const sessions = items.filter(ev => (ev.type || '').trim() !== 'meal');
-  const now = parisNow();
-
-  for (const ev of sessions) {
-    const dateStr = resolveDate(ev.jour);
-    if (!dateStr) continue;
-    const parsed = parseTime(ev.heure);
-    if (!parsed) continue;
-    const start = parisDt(dateStr, parsed.start);
-
-    const diffMs = start - now;
-    const diffMin = Math.floor(diffMs / 60000);
-    const key = ev.jour + '-' + (ev.titre_fr || '') + '-' + parsed.start;
-
-    console.log('[Notif] ' + (ev.titre_fr||'?') + ' → dans ' + diffMin + ' min (fenêtre: 8-12) key=' + key + ' déjà envoyé=' + notifSentKeys.includes(key));
-
-    // Notify between 8 and 12 min before (window to account for 30s check interval)
-    if (diffMin >= 8 && diffMin <= 12 && !notifSentKeys.includes(key)) {
-      notifSentKeys.push(key);
-      try { localStorage.setItem('cd2026-notif-sent', JSON.stringify(notifSentKeys)); } catch(e) {}
-      const title = lang === 'en' ? (ev.titre_en || ev.titre_fr) : ev.titre_fr;
-      showNotif('⏱ ' + (lang === 'fr' ? 'Dans ~10 min' : 'In ~10 min'), {
-        body: title + ' — ' + (ev.heure || ''),
-        icon: 'icon-192.png',
-        tag: key
-      });
-    }
-  }
-}
-
-/* ══════════════════════════════════════════════════════
    MODE HORS-LIGNE AMÉLIORÉ — cache localStorage
    ══════════════════════════════════════════════════════ */
 function saveDataCache(data) {
@@ -2019,9 +1903,6 @@ function renderAll() {
   // Show alert popups AFTER splash has disappeared
   setTimeout(() => checkAlerts(), 900);
 
-  // Show notification banner after 3s
-  setTimeout(() => showNotifBanner(), 3000);
-
   // Track anonymous visit
   trackVisit();
 
@@ -2032,15 +1913,14 @@ function renderAll() {
     }, CONFIG.REFRESH_MS);
   }
 
-  // Refresh countdowns + now/next every 30s, check notifications
+  // Refresh countdowns + now/next every 30s
   setInterval(() => {
     renderSchedule();
     renderNowNext();
-    checkSessionNotifications();
   }, 30000);
 })();
 
-// Register Service Worker for PWA — MUST be early so notifications work
+// Register Service Worker for PWA (offline + install)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(function() {
     console.log('[CD2026] Service Worker enregistré');
