@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cd2026-v15';
+const CACHE_NAME = 'cd2026-v16';
 const ASSETS = [
   './',
   './index.html',
@@ -22,17 +22,6 @@ self.addEventListener('activate', e => {
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
-  );
-});
-
-// Notification click — open or focus the app
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  e.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-      if (clients.length) { return clients[0].focus(); }
-      return self.clients.openWindow('./');
-    })
   );
 });
 
