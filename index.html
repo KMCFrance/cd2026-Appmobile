@@ -747,14 +747,19 @@ a:hover { text-decoration: underline; }
 .diet-badge.veg { background: var(--green-soft); color: var(--green); }
 .diet-badge.vgf { background: var(--gold-soft); color: var(--gold); }
 
-/* ── Allergen button ── */
+/* ── Allergen button (inline with service title) ── */
+.meal-svc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 2px;
+}
 .allergen-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 10px; padding: 7px 14px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; flex-shrink: 0;
   background: var(--surface-alt); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); cursor: pointer;
-  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  border-radius: 14px; cursor: pointer;
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
   transition: background .15s, border-color .15s;
+  white-space: nowrap;
 }
 .allergen-btn:hover, .allergen-btn:active {
   background: var(--pink-soft); border-color: var(--pink);
@@ -1561,10 +1566,11 @@ function renderMeals() {
       const idx = _allergenSvcIndex++;
       const btnHtml = svcHasAllergens(s.dishes)
         ? '<button class="allergen-btn" onclick="openAllergenModal(' + idx + ')">' +
-          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/></svg> ' +
-          (lang === 'fr' ? 'Voir les allergènes' : 'View allergens') + '</button>'
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/></svg> ' +
+          (lang === 'fr' ? 'Allergènes' : 'Allergens') + '</button>'
         : '';
-      return '<div class="card"><div class="meal-service"><div class="meal-svc-title">' + s.name + '</div>' +
+      return '<div class="card"><div class="meal-service">' +
+        '<div class="meal-svc-header"><div class="meal-svc-title">' + s.name + '</div>' + btnHtml + '</div>' +
         '<div class="meal-svc-time">' + s.time + '</div>' +
         '<div class="meal-dishes">' +
         s.dishes.map(d => {
@@ -1572,7 +1578,7 @@ function renderMeals() {
           return '<div class="meal-dish"><div class="meal-dish-name">' + (lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr) + '</div>' +
             '<div class="diet-badges">' + diets.map(dt => '<span class="diet-badge ' + dt + '">' + t(dietLabels[dt] || {fr:dt,en:dt}) + '</span>').join('') + '</div></div>';
         }).join('') +
-        '</div>' + btnHtml + '</div></div>';
+        '</div></div></div>';
     }).join('') +
     (!CONFIG.FIREBASE_URL ? '<div class="notice"><span class="notice-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span><span>' + t(I18N.no_sheet) + '</span></div>' : '');
 }
