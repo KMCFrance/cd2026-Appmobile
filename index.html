@@ -747,6 +747,73 @@ a:hover { text-decoration: underline; }
 .diet-badge.veg { background: var(--green-soft); color: var(--green); }
 .diet-badge.vgf { background: var(--gold-soft); color: var(--gold); }
 
+/* ── Allergen button ── */
+.allergen-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px; padding: 7px 14px;
+  background: var(--surface-alt); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  transition: background .15s, border-color .15s;
+}
+.allergen-btn:hover, .allergen-btn:active {
+  background: var(--pink-soft); border-color: var(--pink);
+  color: var(--pink);
+}
+.allergen-btn svg { flex-shrink: 0; }
+
+/* ── Allergen modal ── */
+.allergen-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 9000;
+  justify-content: center; align-items: flex-end;
+  animation: fadeIn .2s;
+}
+.allergen-overlay.show { display: flex; }
+.allergen-modal {
+  background: var(--surface); width: 100%; max-width: 440px;
+  max-height: 85vh; overflow-y: auto;
+  border-radius: 20px 20px 0 0; padding: 20px 18px 28px;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.allergen-modal-title {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  color: var(--text); margin-bottom: 4px;
+}
+.allergen-modal-sub {
+  font-size: 12px; color: var(--text-muted); margin-bottom: 16px;
+}
+.allergen-dish-block { margin-bottom: 16px; }
+.allergen-dish-name {
+  font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 6px;
+}
+.allergen-icons {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px;
+}
+.allergen-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 12px;
+  background: var(--surface-alt); font-size: 12px; color: var(--text-secondary);
+}
+.allergen-chip .a-icon { font-size: 14px; }
+.allergen-note {
+  font-size: 12px; font-style: italic; color: var(--text-muted);
+  margin-top: 4px; padding-left: 4px;
+}
+.allergen-none {
+  font-size: 13px; color: var(--green); font-style: italic;
+}
+.allergen-close {
+  display: block; margin: 8px auto 0; padding: 10px 28px;
+  background: var(--pink); color: #fff; border: none;
+  border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+
 /* ── Accordion ── */
 .accordion { margin-bottom: 8px; }
 .acc-trigger {
@@ -996,6 +1063,11 @@ a:hover { text-decoration: underline; }
   </div>
 </div>
 
+<!-- Allergen modal -->
+<div class="allergen-overlay" id="allergenOverlay" onclick="closeAllergenModal(event)">
+  <div class="allergen-modal" id="allergenModal"></div>
+</div>
+
 <!-- ═══════════ MAIN ═══════════ -->
 <main class="content">
 
@@ -1174,17 +1246,17 @@ const FALLBACK_HORAIRES = [
 ];
 
 const FALLBACK_REPAS = [
-  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Soupe de légumes de saison', plat_en:'Seasonal vegetable soup', regime:'veg,vgf'},
-  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Gratin de pâtes aux légumes', plat_en:'Pasta and vegetable gratin', regime:'veg'},
-  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Salade composée', plat_en:'Mixed salad', regime:'veg,vgf'},
-  {jour:'sam-28', service_fr:'Déjeuner', service_en:'Lunch', heure:'13h15 – 14h15', plat_fr:'Curry de légumes au lait de coco', plat_en:'Coconut vegetable curry', regime:'veg,vgf'},
-  {jour:'sam-28', service_fr:'Déjeuner', service_en:'Lunch', heure:'13h15 – 14h15', plat_fr:'Riz basmati', plat_en:'Basmati rice', regime:'veg,vgf'},
-  {jour:'sam-28', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Quiche aux poireaux', plat_en:'Leek quiche', regime:'veg'},
-  {jour:'sam-28', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Salade verte', plat_en:'Green salad', regime:'veg,vgf'},
-  {jour:'dim-29', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Lasagnes végétariennes', plat_en:'Vegetarian lasagne', regime:'veg'},
-  {jour:'dim-29', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Salade de quinoa', plat_en:'Quinoa salad', regime:'veg,vgf'},
-  {jour:'dim-29', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Dhal de lentilles corail', plat_en:'Red lentil dhal', regime:'veg,vgf'},
-  {jour:'lun-30', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Repas convivial de fin de Célébration', plat_en:'Farewell community meal', regime:'veg'},
+  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Soupe de légumes de saison', plat_en:'Seasonal vegetable soup', regime:'veg,vgf', allergenes:'celeri', allergenes_note_fr:'Peut contenir des traces de céleri-rave', allergenes_note_en:'May contain traces of celeriac'},
+  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Gratin de pâtes aux légumes', plat_en:'Pasta and vegetable gratin', regime:'veg', allergenes:'gluten,lait,oeufs'},
+  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Salade composée', plat_en:'Mixed salad', regime:'veg,vgf', allergenes:'moutarde,sesame'},
+  {jour:'sam-28', service_fr:'Déjeuner', service_en:'Lunch', heure:'13h15 – 14h15', plat_fr:'Curry de légumes au lait de coco', plat_en:'Coconut vegetable curry', regime:'veg,vgf', allergenes:''},
+  {jour:'sam-28', service_fr:'Déjeuner', service_en:'Lunch', heure:'13h15 – 14h15', plat_fr:'Riz basmati', plat_en:'Basmati rice', regime:'veg,vgf', allergenes:''},
+  {jour:'sam-28', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Quiche aux poireaux', plat_en:'Leek quiche', regime:'veg', allergenes:'gluten,lait,oeufs'},
+  {jour:'sam-28', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Salade verte', plat_en:'Green salad', regime:'veg,vgf', allergenes:'moutarde'},
+  {jour:'dim-29', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Lasagnes végétariennes', plat_en:'Vegetarian lasagne', regime:'veg', allergenes:'gluten,lait,oeufs,celeri'},
+  {jour:'dim-29', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Salade de quinoa', plat_en:'Quinoa salad', regime:'veg,vgf', allergenes:'fruits_coque,sesame'},
+  {jour:'dim-29', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Dhal de lentilles corail', plat_en:'Red lentil dhal', regime:'veg,vgf', allergenes:''},
+  {jour:'lun-30', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Repas convivial de fin de Célébration', plat_en:'Farewell community meal', regime:'veg', allergenes:'gluten,lait'},
 ];
 
 const BOUTIQUE_ITEMS = [
@@ -1431,8 +1503,29 @@ function renderBoutique() {
 }
 
 // ── Meals ──
+/* ── 14 allergènes réglementaires ── */
+const ALLERGENS = {
+  gluten:    {icon:'🌾', fr:'Gluten',            en:'Gluten'},
+  crustaces: {icon:'🦐', fr:'Crustacés',         en:'Crustaceans'},
+  oeufs:     {icon:'🥚', fr:'Œufs',              en:'Eggs'},
+  poisson:   {icon:'🐟', fr:'Poisson',           en:'Fish'},
+  arachides: {icon:'🥜', fr:'Arachides',         en:'Peanuts'},
+  soja:      {icon:'🫘', fr:'Soja',              en:'Soy'},
+  lait:      {icon:'🥛', fr:'Lait',              en:'Milk'},
+  fruits_coque:{icon:'🌰', fr:'Fruits à coque',  en:'Tree nuts'},
+  celeri:    {icon:'🥬', fr:'Céleri',             en:'Celery'},
+  moutarde:  {icon:'🟡', fr:'Moutarde',          en:'Mustard'},
+  sesame:    {icon:'⚪', fr:'Sésame',             en:'Sesame'},
+  sulfites:  {icon:'🍷', fr:'Sulfites',           en:'Sulphites'},
+  lupin:     {icon:'🌸', fr:'Lupin',              en:'Lupin'},
+  mollusques:{icon:'🐚', fr:'Mollusques',         en:'Molluscs'}
+};
+
+let _allergenSvcIndex = 0;
+
 function renderMeals() {
   const items = sheetData.repas || FALLBACK_REPAS;
+  _allergenSvcIndex = 0;
 
   // Discover meal days from data
   const dayOrder = ['ven-27','sam-28','dim-29','lun-30'];
@@ -1446,29 +1539,95 @@ function renderMeals() {
 
   // Group by service
   const services = {};
+  const svcOrder = [];
   dayItems.forEach(r => {
     const svc = lang === 'en' ? (r.service_en || r.service_fr) : r.service_fr;
     const key = svc + '|' + (r.heure || '');
-    if (!services[key]) services[key] = { name: svc, time: r.heure || '', dishes: [] };
+    if (!services[key]) { services[key] = { name: svc, time: r.heure || '', dishes: [] }; svcOrder.push(key); }
     services[key].dishes.push(r);
   });
 
   const dietLabels = {veg:{fr:'Végétarien',en:'Vegetarian'}, vgf:{fr:'Végan SG',en:'Vegan GF'}};
 
+  // Check if any dish in a service has allergen info
+  function svcHasAllergens(dishes) {
+    return dishes.some(d => (d.allergenes || '').trim() || (d.allergenes_note_fr || d.allergenes_note_en || '').trim());
+  }
+
   const body = document.getElementById('mealsBody');
   body.innerHTML =
-    Object.values(services).map(s =>
-      '<div class="card"><div class="meal-service"><div class="meal-svc-title">' + s.name + '</div>' +
-      '<div class="meal-svc-time">' + s.time + '</div>' +
-      '<div class="meal-dishes">' +
-      s.dishes.map(d => {
-        const diets = (d.regime || '').split(',').map(x => x.trim()).filter(Boolean);
-        return '<div class="meal-dish"><div class="meal-dish-name">' + (lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr) + '</div>' +
-          '<div class="diet-badges">' + diets.map(dt => '<span class="diet-badge ' + dt + '">' + t(dietLabels[dt] || {fr:dt,en:dt}) + '</span>').join('') + '</div></div>';
-      }).join('') +
-      '</div></div></div>'
-    ).join('') +
+    svcOrder.map(key => {
+      const s = services[key];
+      const idx = _allergenSvcIndex++;
+      const btnHtml = svcHasAllergens(s.dishes)
+        ? '<button class="allergen-btn" onclick="openAllergenModal(' + idx + ')">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/></svg> ' +
+          (lang === 'fr' ? 'Voir les allergènes' : 'View allergens') + '</button>'
+        : '';
+      return '<div class="card"><div class="meal-service"><div class="meal-svc-title">' + s.name + '</div>' +
+        '<div class="meal-svc-time">' + s.time + '</div>' +
+        '<div class="meal-dishes">' +
+        s.dishes.map(d => {
+          const diets = (d.regime || '').split(',').map(x => x.trim()).filter(Boolean);
+          return '<div class="meal-dish"><div class="meal-dish-name">' + (lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr) + '</div>' +
+            '<div class="diet-badges">' + diets.map(dt => '<span class="diet-badge ' + dt + '">' + t(dietLabels[dt] || {fr:dt,en:dt}) + '</span>').join('') + '</div></div>';
+        }).join('') +
+        '</div>' + btnHtml + '</div></div>';
+    }).join('') +
     (!CONFIG.FIREBASE_URL ? '<div class="notice"><span class="notice-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span><span>' + t(I18N.no_sheet) + '</span></div>' : '');
+}
+
+/* ── Allergen modal logic ── */
+function openAllergenModal(svcIdx) {
+  const items = sheetData.repas || FALLBACK_REPAS;
+  const dayItems = items.filter(r => r.jour === activeMealDay);
+  const services = {};
+  const svcOrder = [];
+  dayItems.forEach(r => {
+    const svc = lang === 'en' ? (r.service_en || r.service_fr) : r.service_fr;
+    const key = svc + '|' + (r.heure || '');
+    if (!services[key]) { services[key] = { name: svc, time: r.heure || '', dishes: [] }; svcOrder.push(key); }
+    services[key].dishes.push(r);
+  });
+  const s = services[svcOrder[svcIdx]];
+  if (!s) return;
+
+  let html = '<div class="allergen-modal-title">' + (lang === 'fr' ? 'Allergènes' : 'Allergens') + '</div>';
+  html += '<div class="allergen-modal-sub">' + s.name + ' — ' + s.time + '</div>';
+
+  s.dishes.forEach(d => {
+    const name = lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr;
+    const codes = (d.allergenes || '').split(',').map(x => x.trim()).filter(Boolean);
+    const note = lang === 'en' ? (d.allergenes_note_en || d.allergenes_note_fr || '') : (d.allergenes_note_fr || '');
+
+    html += '<div class="allergen-dish-block">';
+    html += '<div class="allergen-dish-name">' + name + '</div>';
+    if (codes.length) {
+      html += '<div class="allergen-icons">' +
+        codes.map(c => {
+          const a = ALLERGENS[c];
+          return a
+            ? '<span class="allergen-chip"><span class="a-icon">' + a.icon + '</span> ' + t(a) + '</span>'
+            : '<span class="allergen-chip">' + c + '</span>';
+        }).join('') + '</div>';
+    } else {
+      html += '<div class="allergen-none">' + (lang === 'fr' ? 'Aucun allergène déclaré' : 'No declared allergens') + '</div>';
+    }
+    if (note) html += '<div class="allergen-note">' + note + '</div>';
+    html += '</div>';
+  });
+
+  html += '<button class="allergen-close" onclick="closeAllergenModal()">' + (lang === 'fr' ? 'Fermer' : 'Close') + '</button>';
+
+  document.getElementById('allergenModal').innerHTML = html;
+  document.getElementById('allergenOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAllergenModal(e) {
+  if (e && e.target !== document.getElementById('allergenOverlay')) return;
+  document.getElementById('allergenOverlay').classList.remove('show');
+  document.body.style.overflow = '';
 }
 
 // ── Infos (from Sheet or fallback) ──
