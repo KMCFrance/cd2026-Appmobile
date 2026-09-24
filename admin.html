@@ -182,6 +182,43 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
   border-color: var(--green);
 }
 .field textarea { resize: vertical; min-height: 80px; }
+
+/* ── Allergen picker ── */
+.allergen-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.allergen-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 14px;
+  background: var(--saffron-soft); color: var(--saffron);
+  font-size: 0.82rem; font-weight: 600;
+}
+.allergen-tag .a-remove {
+  cursor: pointer; margin-left: 2px; font-size: 14px;
+  color: var(--saffron); opacity: .6; line-height: 1;
+}
+.allergen-tag .a-remove:hover { opacity: 1; }
+.allergen-add-wrap { position: relative; display: inline-block; }
+.allergen-add-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 14px;
+  background: var(--green-soft); color: var(--green);
+  font-size: 0.82rem; font-weight: 600;
+  border: 1px dashed var(--green); cursor: pointer;
+}
+.allergen-add-btn:hover { background: var(--green); color: #fff; }
+.allergen-dropdown {
+  display: none; position: absolute; left: 0; top: 100%;
+  margin-top: 4px; z-index: 100;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  max-height: 220px; overflow-y: auto; min-width: 220px;
+}
+.allergen-dropdown.show { display: block; }
+.allergen-dropdown-item {
+  padding: 8px 12px; cursor: pointer; font-size: 0.85rem;
+  display: flex; align-items: center; gap: 6px;
+}
+.allergen-dropdown-item:hover { background: var(--surface-alt); }
+.allergen-dropdown-item .a-icon { font-size: 16px; }
 .field select { cursor: pointer; }
 
 .btn {
@@ -588,6 +625,26 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 
 <script>
 /* ══════════════════════════════════════
+   14 ALLERGENES REGLEMENTAIRES
+   ══════════════════════════════════════ */
+const ALLERGEN_LIST = [
+  {code:'gluten',      icon:'🌾', label:'Gluten'},
+  {code:'crustaces',   icon:'🦐', label:'Crustacés'},
+  {code:'oeufs',       icon:'🥚', label:'Œufs'},
+  {code:'poisson',     icon:'🐟', label:'Poisson'},
+  {code:'arachides',   icon:'🥜', label:'Arachides'},
+  {code:'soja',        icon:'🫘', label:'Soja'},
+  {code:'lait',        icon:'🥛', label:'Lait'},
+  {code:'fruits_coque',icon:'🌰', label:'Fruits à coque'},
+  {code:'celeri',      icon:'🥬', label:'Céleri'},
+  {code:'moutarde',    icon:'🟡', label:'Moutarde'},
+  {code:'sesame',      icon:'⚪', label:'Sésame'},
+  {code:'sulfites',    icon:'🍷', label:'Sulfites'},
+  {code:'lupin',       icon:'🌸', label:'Lupin'},
+  {code:'mollusques',  icon:'🐚', label:'Mollusques'},
+];
+
+/* ══════════════════════════════════════
    CONFIG
    ══════════════════════════════════════ */
 const CONFIG = {
@@ -669,7 +726,7 @@ const SECTIONS = {
       { key: 'plat_fr', label: 'Plat (FR)', type: 'text', full: true },
       { key: 'plat_en', label: 'Plat (EN)', type: 'text', full: true },
       { key: 'regime', label: 'Regime', type: 'text', placeholder: 'veg,vgf' },
-      { key: 'allergenes', label: 'Allergenes (codes)', type: 'text', full: true, placeholder: 'gluten,lait,oeufs,celeri,moutarde,sesame,soja,arachides,fruits_coque,crustaces,poisson,mollusques,lupin,sulfites' },
+      { key: 'allergenes', label: 'Allergenes', type: 'allergen-picker', full: true },
       { key: 'allergenes_note_fr', label: 'Note allergenes (FR)', type: 'text', full: true, placeholder: 'Peut contenir des traces de...' },
       { key: 'allergenes_note_en', label: 'Note allergenes (EN)', type: 'text', full: true, placeholder: 'May contain traces of...' },
     ],
@@ -1031,7 +1088,23 @@ function renderFields(fields, item, sectionKey, idx) {
     const fullClass = f.full ? ' full' : '';
     let input;
 
-    if (f.type === 'select') {
+    if (f.type === 'allergen-picker') {
+      const codes = String(val||'').split(',').map(x=>x.trim()).filter(Boolean);
+      const tags = codes.map(c => {
+        const a = ALLERGEN_LIST.find(x=>x.code===c);
+        const lbl = a ? a.icon + ' ' + a.label : c;
+        return `<span class="allergen-tag">${lbl}<span class="a-remove" onclick="removeAllergen('${sectionKey}','${idx}','${f.key}','${c}')">&times;</span></span>`;
+      }).join('');
+      const pickerId = `ap-${sectionKey}-${idx}`;
+      input = `<div class="allergen-picker" id="${inputId}-tags">${tags}` +
+        `<div class="allergen-add-wrap"><button type="button" class="allergen-add-btn" onclick="toggleAllergenDrop('${pickerId}')">+ Ajouter</button>` +
+        `<div class="allergen-dropdown" id="${pickerId}">` +
+        ALLERGEN_LIST.filter(a=>!codes.includes(a.code)).map(a =>
+          `<div class="allergen-dropdown-item" onclick="addAllergen('${sectionKey}','${idx}','${f.key}','${a.code}','${pickerId}')"><span class="a-icon">${a.icon}</span> ${a.label}</div>`
+        ).join('') +
+        (ALLERGEN_LIST.filter(a=>!codes.includes(a.code)).length === 0 ? '<div style="padding:10px;color:var(--text-muted);font-size:0.85rem;">Tous ajoutés</div>' : '') +
+        `</div></div></div>`;
+    } else if (f.type === 'select') {
       const opts = f.options.map(o =>
         `<option value="${o.value}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`
       ).join('');
@@ -1054,6 +1127,47 @@ function renderFields(fields, item, sectionKey, idx) {
 
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── Allergen picker helpers ── */
+function toggleAllergenDrop(pickerId) {
+  const dd = document.getElementById(pickerId);
+  if (!dd) return;
+  const show = !dd.classList.contains('show');
+  // Close all dropdowns first
+  document.querySelectorAll('.allergen-dropdown.show').forEach(el => el.classList.remove('show'));
+  if (show) dd.classList.add('show');
+}
+
+function addAllergen(sectionKey, idx, fieldKey, code, pickerId) {
+  const current = getAllergenCodes(sectionKey, idx, fieldKey);
+  if (!current.includes(code)) current.push(code);
+  updateField(sectionKey, idx, fieldKey, current.join(','));
+  document.querySelectorAll('.allergen-dropdown.show').forEach(el => el.classList.remove('show'));
+  renderSection();
+}
+
+function removeAllergen(sectionKey, idx, fieldKey, code) {
+  const current = getAllergenCodes(sectionKey, idx, fieldKey).filter(c => c !== code);
+  updateField(sectionKey, idx, fieldKey, current.join(','));
+  renderSection();
+}
+
+function getAllergenCodes(sectionKey, idx, fieldKey) {
+  let item;
+  if (idx === 'new') {
+    item = (data._new && data._new[sectionKey]) || {};
+  } else {
+    item = (data[sectionKey] || [])[parseInt(idx)] || {};
+  }
+  return String(item[fieldKey] || '').split(',').map(x=>x.trim()).filter(Boolean);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.allergen-add-wrap')) {
+    document.querySelectorAll('.allergen-dropdown.show').forEach(el => el.classList.remove('show'));
+  }
+});
 
 /* ══════════════════════════════════════
    ACTIONS
