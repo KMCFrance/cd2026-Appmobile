@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cd2026-v20';
+const CACHE_NAME = 'cd2026-v21';
 const ASSETS = [
   './',
   './index.html',
