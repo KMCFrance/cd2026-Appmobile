@@ -1287,6 +1287,7 @@ let activeDay = 'ven-27';
 let activeMealDay = 'ven-27';
 let activeCafeDay = '__carte__';
 let activeBoutiqueDay = 'ven-27';
+let cafeCarteVisible = true; // loaded from Firebase config
 let sheetData = { cafe: null, repas: null, horaires: null, programme: null, infos: null, alertes: null, lastFetch: null };
 
 const t = (o) => o ? (o[lang] || o.fr || '') : '';
@@ -1312,6 +1313,11 @@ async function loadSheetData() {
     sheetData.lastFetch = new Date();
     // Cache for offline use
     saveDataCache(data);
+    // Load café visibility config
+    try {
+      const cv = await fetch(CONFIG.FIREBASE_URL + '/config/cafeVisible.json');
+      if (cv.ok) { const v = await cv.json(); if (v !== null) cafeCarteVisible = v; }
+    } catch(e) { /* keep default */ }
     return true;
   } catch (e) {
     console.warn('[CD2026] Erreur Firebase:', e);
@@ -1425,9 +1431,9 @@ function renderCafe() {
   });
   const cafeDays = dayOrder.filter(d => cafeDayMap[d]);
 
-  // Add "Voir la carte" as special tab
-  const allTabs = [...cafeDays, '__carte__'];
-  if (!allTabs.includes(activeCafeDay)) activeCafeDay = cafeDays.length ? cafeDays[0] : '__carte__';
+  // Add "Voir la carte" as special tab (only if visible in config)
+  const allTabs = cafeCarteVisible ? [...cafeDays, '__carte__'] : [...cafeDays];
+  if (!allTabs.includes(activeCafeDay)) activeCafeDay = allTabs.length ? allTabs[0] : '__carte__';
 
   // Render tabs
   const carteLabel = t(I18N.voir_carte);
