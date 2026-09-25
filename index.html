@@ -1574,7 +1574,9 @@ function renderMeals() {
         '<div class="meal-svc-time">' + s.time + '</div>' +
         '<div class="meal-dishes">' +
         s.dishes.map(d => {
-          const diets = (d.regime || '').split(',').map(x => x.trim()).filter(Boolean);
+          let diets = (d.regime || '').split(',').map(x => x.trim()).filter(Boolean);
+          if (d.vegan === true || d.vegan === 'true') { if (!diets.includes('veg')) diets.push('veg'); }
+          if (d.sans_gluten === true || d.sans_gluten === 'true') { if (!diets.includes('vgf')) diets.push('vgf'); }
           return '<div class="meal-dish"><div class="meal-dish-name">' + (lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr) + '</div>' +
             '<div class="diet-badges">' + diets.map(dt => '<span class="diet-badge ' + dt + '">' + t(dietLabels[dt] || {fr:dt,en:dt}) + '</span>').join('') + '</div></div>';
         }).join('') +
