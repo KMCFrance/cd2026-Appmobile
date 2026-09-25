@@ -615,48 +615,190 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 }
 .btn-preview:hover { background: var(--green-soft); }
 
-/* Preview overlay */
+/* Preview overlay — app-faithful */
 .preview-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); z-index: 200;
   align-items: flex-start; justify-content: center;
-  padding: 24px 16px; overflow-y: auto;
+  padding: 16px 8px; overflow-y: auto;
 }
 .preview-overlay.show { display: flex; }
 .preview-modal {
-  background: var(--bg); border-radius: var(--radius);
-  width: 100%; max-width: 420px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  overflow: hidden;
+  background: var(--bg); border-radius: 20px;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  overflow: hidden; border: 2px solid var(--border);
 }
 .preview-modal-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
   background: var(--green-deep); color: #fff;
 }
-.preview-modal-head h3 { font-size: 1.1rem; color: #fff; }
+.preview-modal-head h3 { font-size: 1rem; color: #fff; font-family: var(--font-display); }
 .preview-modal-close {
-  background: rgba(255,255,255,.15); border: none; font-size: 1.2rem;
+  background: rgba(255,255,255,.15); border: none; font-size: 1.1rem;
   cursor: pointer; color: #fff; padding: 4px 10px; border-radius: 6px;
 }
-.preview-modal-body { padding: 16px; }
+.preview-modal-body { padding: 0; background: var(--bg); }
 
-/* Preview item cards */
-.pv-day { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--green-deep); margin: 14px 0 8px; }
-.pv-day:first-child { margin-top: 0; }
-.pv-item {
+/* ── App-faithful preview styles ── */
+.pv-section-head {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+.pv-section-head h2 {
+  font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text);
+}
+.pv-day-strip {
+  display: flex; gap: 6px; padding: 10px 14px 6px; overflow-x: auto;
+  scrollbar-width: none;
+}
+.pv-day-strip::-webkit-scrollbar { display: none; }
+.pv-day-pill {
+  flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  background: var(--surface); color: var(--text-secondary);
+  border: 1px solid var(--border); cursor: pointer; white-space: nowrap;
+  transition: all 0.2s;
+}
+.pv-day-pill.active { background: var(--pink); color: #fff; border-color: var(--pink); }
+/* Timeline */
+.pv-timeline { padding: 4px 14px 14px 20px; }
+.pv-tl-event { display: flex; gap: 12px; position: relative; }
+.pv-tl-event:last-child .pv-tl-line { display: none; }
+.pv-tl-spine { display: flex; flex-direction: column; align-items: center; width: 12px; flex-shrink: 0; padding-top: 6px; }
+.pv-tl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); flex-shrink: 0; z-index: 1; }
+.pv-tl-dot.meditation { background: var(--green); }
+.pv-tl-dot.teaching { background: var(--green-deep); }
+.pv-tl-dot.ceremony { background: var(--pink); }
+.pv-tl-dot.meal { background: var(--gold); }
+.pv-tl-dot.practical { background: var(--text-muted); }
+.pv-tl-line { width: 1.5px; flex: 1; background: var(--border-light); margin: 3px 0; }
+.pv-tl-card {
+  flex: 1; background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+.pv-tl-card.ceremony { border-left: 3px solid var(--pink); background: var(--pink-soft); }
+.pv-tl-time { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.03em; }
+.pv-tl-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; margin-top: 1px; }
+.pv-tl-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
+.pv-tl-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 8px; margin-top: 4px; background: var(--pink-soft); color: var(--pink); }
+/* Cards */
+.pv-card {
   background: var(--surface); border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px;
+  border-radius: var(--radius); padding: 16px; margin: 0 12px 12px;
+  box-shadow: 0 2px 6px var(--shadow);
 }
-.pv-item-title { font-weight: 600; font-size: 0.95rem; }
-.pv-item-sub { font-size: 0.82rem; color: var(--text-muted); }
-.pv-badge {
-  display: inline-block; font-size: 0.72rem; padding: 2px 8px;
-  border-radius: 10px; font-weight: 600; margin-left: 6px;
-}
+.pv-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pv-card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+.pv-card-icon.cafe { background: var(--gold-soft); color: var(--gold); }
+.pv-card-icon.shop { background: var(--pink-soft); color: var(--pink); }
+.pv-card-title { font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--text); }
+/* Menu */
+.pv-menu-cat { margin-top: 14px; }
+.pv-menu-cat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--pink); margin-bottom: 6px; }
+.pv-menu-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; font-size: 13px; }
+.pv-menu-name { color: var(--text); }
+.pv-menu-price { color: var(--text-secondary); white-space: nowrap; }
+.pv-menu-note { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 12px; }
+/* Hours */
+.pv-hours-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+.pv-hours-row:last-child { border-bottom: none; }
+.pv-hours-day { font-weight: 500; color: var(--text); }
+.pv-hours-time { color: var(--text-secondary); }
+/* Meals */
+.pv-meal-svc { margin-bottom: 6px; }
+.pv-meal-svc-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--text); }
+.pv-meal-svc-time { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+.pv-meal-dish { padding: 8px 12px; background: var(--surface-alt); border-radius: var(--radius-sm); margin-bottom: 6px; }
+.pv-meal-dish-name { font-weight: 500; font-size: 13px; }
+.pv-diet-badges { display: flex; gap: 5px; margin-top: 4px; }
+.pv-diet-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 7px; }
+.pv-diet-badge.veg { background: var(--green-soft); color: var(--green); }
+.pv-diet-badge.vgf { background: var(--gold-soft); color: var(--gold); }
+.pv-allergen-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.pv-allergen-chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 10px; background: var(--surface-alt); font-size: 10px; color: var(--text-secondary); }
+/* Generic badges */
+.pv-badge { display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 4px; }
 .pv-vegan { background: #E8F5E9; color: #2E7D32; }
 .pv-gf { background: #FFF3E0; color: #E65100; }
-.pv-cat-header { font-size: 0.9rem; font-weight: 600; color: var(--saffron); margin: 12px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Date manager bar ── */
+.date-manager {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  padding: 10px 14px; margin-bottom: 12px;
+  background: var(--surface-alt); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+}
+.date-manager .date-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 14px;
+  background: var(--green-soft); color: var(--green-deep);
+  font-size: 0.82rem; font-weight: 600;
+}
+.date-chip .date-edit, .date-chip .date-remove {
+  cursor: pointer; font-size: 12px; padding: 0 2px;
+  color: var(--text-muted); line-height: 1;
+}
+.date-chip .date-edit:hover { color: var(--green); }
+.date-chip .date-remove:hover { color: var(--danger); }
+.date-manager .date-add-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 14px;
+  background: var(--surface); color: var(--green);
+  font-size: 0.82rem; font-weight: 600;
+  border: 1px dashed var(--green); cursor: pointer;
+}
+.date-manager .date-add-btn:hover { background: var(--green); color: #fff; }
+
+/* ── Service type manager ── */
+.svc-type-manager {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  padding: 10px 14px; margin-bottom: 12px;
+  background: var(--saffron-soft); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+}
+.svc-type-manager .svc-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 14px;
+  background: var(--gold-soft); color: var(--gold);
+  font-size: 0.82rem; font-weight: 600;
+}
+.svc-chip .svc-edit, .svc-chip .svc-remove {
+  cursor: pointer; font-size: 12px; padding: 0 2px;
+  color: var(--text-muted); line-height: 1;
+}
+.svc-chip .svc-edit:hover { color: var(--gold); }
+.svc-chip .svc-remove:hover { color: var(--danger); }
+.svc-type-manager .svc-add-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 14px;
+  background: var(--surface); color: var(--saffron);
+  font-size: 0.82rem; font-weight: 600;
+  border: 1px dashed var(--saffron); cursor: pointer;
+}
+.svc-type-manager .svc-add-btn:hover { background: var(--saffron); color: #fff; }
+
+/* Café visibility toggle */
+.cafe-visibility-toggle {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; margin-bottom: 12px;
+  background: var(--gold-soft); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-secondary);
+}
+.cafe-visibility-toggle label { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.cafe-visibility-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; }
+
+/* Duplicate horaires button */
+.duplicate-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; font-size: 0.82rem; font-weight: 500;
+  color: var(--saffron); background: var(--saffron-soft);
+  border: 1px solid var(--saffron); border-radius: var(--radius-sm);
+  cursor: pointer; margin: 4px 0 12px;
+}
+.duplicate-btn:hover { background: var(--saffron); color: #fff; }
 
 /* Category rename modal */
 .cat-rename-wrap {
@@ -790,117 +932,140 @@ const CONFIG = {
 /* ══════════════════════════════════════
    SCHEMA — defines each section
    ══════════════════════════════════════ */
-const JOUR_OPTIONS = [
+/* Dynamic JOUR_OPTIONS — loaded from Firebase config, editable from admin UI */
+let JOUR_OPTIONS = [
   { value: 'ven-27', label: 'Vendredi 27' },
   { value: 'sam-28', label: 'Samedi 28' },
   { value: 'dim-29', label: 'Dimanche 29' },
   { value: 'lun-30', label: 'Lundi 30' },
 ];
 
-const SECTIONS = {
-  programme: {
-    label: 'Programme',
-    titleField: 'titre_fr',
-    subField: item => `${(JOUR_OPTIONS.find(j=>j.value===item.jour)||{}).label||item.jour||''} — ${item.heure||''}`,
-    fields: [
-      { key: 'jour', label: 'Jour', type: 'select', options: JOUR_OPTIONS },
-      { key: 'heure', label: 'Heure', type: 'text', placeholder: '09h00–10h00' },
-      { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
-      { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
-      { key: 'type', label: 'Type', type: 'select', options: [
-        { value: 'meditation', label: 'Meditation' },
-        { value: 'teaching', label: 'Enseignement' },
-        { value: 'ceremony', label: 'Ceremonie' },
-        { value: 'meal', label: 'Repas' },
-        { value: 'practical', label: 'Pratique' },
-      ]},
-      { key: 'badge_fr', label: 'Badge (FR)', type: 'text' },
-      { key: 'badge_en', label: 'Badge (EN)', type: 'text' },
-      { key: 'desc_fr', label: 'Description (FR)', type: 'textarea', full: true },
-      { key: 'desc_en', label: 'Description (EN)', type: 'textarea', full: true },
-      { key: 'sadhana_fr', label: 'Sadhana utilisée (FR)', type: 'text', full: true, placeholder: 'Ex: Prières pour la méditation' },
-      { key: 'sadhana_en', label: 'Sadhana utilisée (EN)', type: 'text', full: true, placeholder: 'Ex: Prayers for meditation' },
-    ],
-  },
-  cafe: {
-    label: 'Cafe',
-    titleField: 'nom_fr',
-    subField: item => `${item.categorie_fr||''} — ${item.prix||''}`,
-    groupBy: 'categorie_fr',
-    groupLabel: item => item.categorie_fr || 'Sans catégorie',
-    fields: [
-      { key: 'categorie_fr', label: 'Categorie (FR)', type: 'text' },
-      { key: 'categorie_en', label: 'Categorie (EN)', type: 'text' },
-      { key: 'nom_fr', label: 'Nom (FR)', type: 'text' },
-      { key: 'nom_en', label: 'Nom (EN)', type: 'text' },
-      { key: 'prix', label: 'Prix', type: 'text', placeholder: '2,50 EUR' },
-      { key: 'vegan', label: 'Végan', type: 'checkbox' },
-      { key: 'sans_gluten', label: 'Sans gluten', type: 'checkbox' },
-    ],
-  },
-  horaires: {
-    label: 'Horaires',
-    titleField: 'jour_fr',
-    subField: item => `${item.ouverture||''} — ${item.fermeture||''}`,
-    fields: [
-      { key: 'lieu', label: 'Lieu', type: 'select', options: [
-        { value: 'cafe', label: 'World Peace Café' },
-        { value: 'shop', label: 'Boutique' },
-      ]},
-      { key: 'jour_fr', label: 'Jour (FR)', type: 'text' },
-      { key: 'jour_en', label: 'Jour (EN)', type: 'text' },
-      { key: 'ouverture', label: 'Ouverture', type: 'text', placeholder: '08h00' },
-      { key: 'fermeture', label: 'Fermeture', type: 'text', placeholder: '21h00' },
-    ],
-  },
-  repas: {
-    label: 'Repas',
-    titleField: 'plat_fr',
-    subField: item => `${(JOUR_OPTIONS.find(j=>j.value===item.jour)||{}).label||item.jour||''} — ${item.service_fr||''}`,
-    fields: [
-      { key: 'jour', label: 'Jour', type: 'select', options: JOUR_OPTIONS },
-      { key: 'service_fr', label: 'Service (FR)', type: 'text' },
-      { key: 'service_en', label: 'Service (EN)', type: 'text' },
-      { key: 'heure', label: 'Heure', type: 'text', placeholder: '12h45–13h45' },
-      { key: 'plat_fr', label: 'Plat (FR)', type: 'text', full: true },
-      { key: 'plat_en', label: 'Plat (EN)', type: 'text', full: true },
-      { key: 'vegan', label: 'Végan', type: 'checkbox' },
-      { key: 'sans_gluten', label: 'Sans gluten', type: 'checkbox' },
-      { key: 'allergenes', label: 'Allergenes', type: 'allergen-picker', full: true },
-      { key: 'allergenes_note_fr', label: 'Note allergenes (FR)', type: 'text', full: true, placeholder: 'Peut contenir des traces de...' },
-      { key: 'allergenes_note_en', label: 'Note allergenes (EN)', type: 'text', full: true, placeholder: 'May contain traces of...' },
-    ],
-  },
-  infos: {
-    label: 'Infos',
-    titleField: 'titre_fr',
-    subField: item => item.id || '',
-    fields: [
-      { key: 'id', label: 'Identifiant', type: 'text', placeholder: 'transport' },
-      { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
-      { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
-      { key: 'contenu_fr', label: 'Contenu (FR) — HTML accepte', type: 'textarea', full: true },
-      { key: 'contenu_en', label: 'Contenu (EN) — HTML accepte', type: 'textarea', full: true },
-    ],
-  },
-  alertes: {
-    label: 'Alertes',
-    titleField: 'titre_fr',
-    subField: item => `${item.emoji||''} ${item.actif === 'oui' ? 'Active' : 'Inactive'}`,
-    fields: [
-      { key: 'id', label: 'Identifiant', type: 'text' },
-      { key: 'actif', label: 'Active', type: 'select', options: [
-        { value: 'oui', label: 'Oui' },
-        { value: 'non', label: 'Non' },
-      ]},
-      { key: 'emoji', label: 'Emoji', type: 'text', placeholder: '⚠️' },
-      { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
-      { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
-      { key: 'contenu_fr', label: 'Contenu (FR) — HTML accepte', type: 'textarea', full: true },
-      { key: 'contenu_en', label: 'Contenu (EN) — HTML accepte', type: 'textarea', full: true },
-    ],
-  },
-};
+/* Dynamic SERVICE_TYPES — loaded from Firebase config, editable from admin UI */
+let SERVICE_TYPES = [
+  { value_fr: 'Petit-déjeuner', value_en: 'Breakfast' },
+  { value_fr: 'Déjeuner', value_en: 'Lunch' },
+  { value_fr: 'Dîner', value_en: 'Dinner' },
+];
+
+/* Café visibility flag */
+let cafeVisible = true;
+
+function getJourOptions() { return JOUR_OPTIONS; }
+function getServiceOptions() {
+  return SERVICE_TYPES.map(s => ({ value: s.value_fr, label: s.value_fr }));
+}
+
+function buildSections() {
+  return {
+    programme: {
+      label: 'Programme',
+      titleField: 'titre_fr',
+      subField: item => `${(getJourOptions().find(j=>j.value===item.jour)||{}).label||item.jour||''} — ${item.heure||''}`,
+      hasDates: true,
+      fields: [
+        { key: 'jour', label: 'Jour', type: 'select', options: getJourOptions() },
+        { key: 'heure', label: 'Heure', type: 'text', placeholder: '09h00–10h00' },
+        { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
+        { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
+        { key: 'type', label: 'Type', type: 'select', options: [
+          { value: 'meditation', label: 'Meditation' },
+          { value: 'teaching', label: 'Enseignement' },
+          { value: 'ceremony', label: 'Ceremonie' },
+          { value: 'meal', label: 'Repas' },
+          { value: 'practical', label: 'Pratique' },
+        ]},
+        { key: 'badge_fr', label: 'Badge (FR)', type: 'text' },
+        { key: 'badge_en', label: 'Badge (EN)', type: 'text' },
+        { key: 'desc_fr', label: 'Description (FR)', type: 'textarea', full: true },
+        { key: 'desc_en', label: 'Description (EN)', type: 'textarea', full: true },
+        { key: 'sadhana_fr', label: 'Sadhana utilisée (FR)', type: 'text', full: true, placeholder: 'Ex: Prières pour la méditation' },
+        { key: 'sadhana_en', label: 'Sadhana utilisée (EN)', type: 'text', full: true, placeholder: 'Ex: Prayers for meditation' },
+      ],
+    },
+    cafe: {
+      label: 'Cafe',
+      titleField: 'nom_fr',
+      subField: item => `${item.categorie_fr||''} — ${item.prix||''}`,
+      groupBy: 'categorie_fr',
+      groupLabel: item => item.categorie_fr || 'Sans catégorie',
+      fields: [
+        { key: 'categorie_fr', label: 'Categorie (FR)', type: 'text' },
+        { key: 'categorie_en', label: 'Categorie (EN)', type: 'text' },
+        { key: 'nom_fr', label: 'Nom (FR)', type: 'text' },
+        { key: 'nom_en', label: 'Nom (EN)', type: 'text' },
+        { key: 'prix', label: 'Prix', type: 'text', placeholder: '2,50 EUR' },
+        { key: 'vegan', label: 'Végan', type: 'checkbox' },
+        { key: 'sans_gluten', label: 'Sans gluten', type: 'checkbox' },
+      ],
+    },
+    horaires: {
+      label: 'Horaires',
+      titleField: 'jour_fr',
+      subField: item => `${item.ouverture||''} — ${item.fermeture||''}`,
+      fields: [
+        { key: 'lieu', label: 'Lieu', type: 'select', options: [
+          { value: 'cafe', label: 'World Peace Café' },
+          { value: 'shop', label: 'Boutique' },
+        ]},
+        { key: 'jour_fr', label: 'Jour (FR)', type: 'text' },
+        { key: 'jour_en', label: 'Jour (EN)', type: 'text' },
+        { key: 'ouverture', label: 'Ouverture', type: 'text', placeholder: '08h00' },
+        { key: 'fermeture', label: 'Fermeture', type: 'text', placeholder: '21h00' },
+      ],
+    },
+    repas: {
+      label: 'Repas',
+      titleField: 'plat_fr',
+      subField: item => `${(getJourOptions().find(j=>j.value===item.jour)||{}).label||item.jour||''} — ${item.service_fr||''}`,
+      hasDates: true,
+      hasServiceTypes: true,
+      fields: [
+        { key: 'jour', label: 'Jour', type: 'select', options: getJourOptions() },
+        { key: 'service_fr', label: 'Service (FR)', type: 'select', options: getServiceOptions() },
+        { key: 'service_en', label: 'Service (EN)', type: 'text', placeholder: 'Auto-rempli' },
+        { key: 'heure', label: 'Heure', type: 'text', placeholder: '12h45–13h45' },
+        { key: 'plat_fr', label: 'Plat (FR)', type: 'text', full: true },
+        { key: 'plat_en', label: 'Plat (EN)', type: 'text', full: true },
+        { key: 'vegan', label: 'Végan', type: 'checkbox' },
+        { key: 'sans_gluten', label: 'Sans gluten', type: 'checkbox' },
+        { key: 'allergenes', label: 'Allergenes', type: 'allergen-picker', full: true },
+        { key: 'allergenes_note_fr', label: 'Note allergenes (FR)', type: 'text', full: true, placeholder: 'Peut contenir des traces de...' },
+        { key: 'allergenes_note_en', label: 'Note allergenes (EN)', type: 'text', full: true, placeholder: 'May contain traces of...' },
+      ],
+    },
+    infos: {
+      label: 'Infos',
+      titleField: 'titre_fr',
+      subField: item => item.id || '',
+      fields: [
+        { key: 'id', label: 'Identifiant', type: 'text', placeholder: 'transport' },
+        { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
+        { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
+        { key: 'contenu_fr', label: 'Contenu (FR) — HTML accepte', type: 'textarea', full: true },
+        { key: 'contenu_en', label: 'Contenu (EN) — HTML accepte', type: 'textarea', full: true },
+      ],
+    },
+    alertes: {
+      label: 'Alertes',
+      titleField: 'titre_fr',
+      subField: item => `${item.emoji||''} ${item.actif === 'oui' ? 'Active' : 'Inactive'}`,
+      fields: [
+        { key: 'id', label: 'Identifiant', type: 'text' },
+        { key: 'actif', label: 'Active', type: 'select', options: [
+          { value: 'oui', label: 'Oui' },
+          { value: 'non', label: 'Non' },
+        ]},
+        { key: 'emoji', label: 'Emoji', type: 'text', placeholder: '⚠️' },
+        { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
+        { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
+        { key: 'contenu_fr', label: 'Contenu (FR) — HTML accepte', type: 'textarea', full: true },
+        { key: 'contenu_en', label: 'Contenu (EN) — HTML accepte', type: 'textarea', full: true },
+      ],
+    },
+  };
+}
+
+let SECTIONS = buildSections();
 
 /* ══════════════════════════════════════
    STATE
@@ -1140,8 +1305,28 @@ async function loadData() {
   content.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> Chargement des donnees...</div>';
 
   try {
-    const result = await fbGet('data.json');
+    // Load data and config in parallel
+    const [result, configResult] = await Promise.all([
+      fbGet('data.json'),
+      fbGet('config.json').catch(() => null),
+    ]);
     data = result || {};
+
+    // Load dynamic config
+    if (configResult) {
+      if (Array.isArray(configResult.jourOptions) && configResult.jourOptions.length) {
+        JOUR_OPTIONS = configResult.jourOptions;
+      }
+      if (Array.isArray(configResult.serviceTypes) && configResult.serviceTypes.length) {
+        SERVICE_TYPES = configResult.serviceTypes;
+      }
+      if (configResult.cafeVisible !== undefined) {
+        cafeVisible = configResult.cafeVisible !== false;
+      }
+    }
+    // Rebuild sections with loaded config
+    SECTIONS = buildSections();
+
     // Ensure each section is an array
     for (const key of Object.keys(SECTIONS)) {
       if (!Array.isArray(data[key])) {
@@ -1178,6 +1363,30 @@ function renderSection() {
 
   if (lastSaved[key]) {
     html += `<div class="section-meta">Derniere sauvegarde : ${lastSaved[key]}</div>`;
+  }
+
+  // ── Date manager (for sections with hasDates) ──
+  if (schema.hasDates) {
+    html += renderDateManager();
+  }
+
+  // ── Service type manager (for repas) ──
+  if (schema.hasServiceTypes) {
+    html += renderServiceTypeManager();
+  }
+
+  // ── Café visibility toggle ──
+  if (key === 'cafe') {
+    html += `<div class="cafe-visibility-toggle">
+      <label>
+        <input type="checkbox" ${cafeVisible ? 'checked' : ''}
+          onchange="toggleCafeVisibility(this.checked)">
+        Afficher la carte sur l'application
+      </label>
+      <span style="font-size:0.78rem;color:var(--text-muted);margin-left:auto;">
+        ${cafeVisible ? '✅ Visible' : '🚫 Masquée'}
+      </span>
+    </div>`;
   }
 
   // ── Horaires: café/boutique sub-filter ──
@@ -1314,12 +1523,15 @@ function renderGroupedItems(key, schema, displayItems) {
         html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
       }
 
-      // Add within category button
+      // Add within category button — hide category fields
       if (addingNewGroup[key] === cat) {
+        const prefilled = { categorie_fr: cat };
+        const match = (data[key]||[]).find(it => it.categorie_fr === cat);
+        if (match) prefilled.categorie_en = match.categorie_en || '';
         html += `<div class="add-card">
           <div class="item-form">
             <h4>Nouvel element — ${escHtml(cat)}</h4>
-            <div class="form-grid">${renderFields(schema.fields, { categorie_fr: cat }, key, 'new')}</div>
+            <div class="form-grid">${renderFields(schema.fields, prefilled, key, 'new', true)}</div>
             <div style="margin-top:12px; display:flex; gap:8px;">
               <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
               <button class="btn btn-outline" onclick="cancelGroupAdd('${key}')">Annuler</button>
@@ -1348,7 +1560,13 @@ function renderGroupedItems(key, schema, displayItems) {
     });
 
     for (const day of dayOrder) {
-      html += `<div class="group-header">${escHtml(day)}</div>`;
+      const dayEsc = escAttr(day);
+      html += `<div class="group-header">
+        <span>${escHtml(day)}</span>
+        <div class="group-actions">
+          <button onclick="duplicateHoraireDay('${dayEsc}')" title="Dupliquer sur tous les jours">📋 Dupliquer</button>
+        </div>
+      </div>`;
       for (const entry of dayGroups[day]) {
         html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
       }
@@ -1410,12 +1628,34 @@ function renderItemCard(key, schema, item, idx, totalCount) {
   </div>`;
 }
 
-function renderFields(fields, item, sectionKey, idx) {
+function renderFields(fields, item, sectionKey, idx, hideCategories) {
   return fields.map(f => {
     const val = item[f.key] !== undefined ? item[f.key] : (f.default || '');
     const inputId = `field-${sectionKey}-${idx}-${f.key}`;
     const fullClass = f.full ? ' full' : '';
     let input;
+
+    // Hide category fields when adding within a category group
+    if (hideCategories && (f.key === 'categorie_fr' || f.key === 'categorie_en')) {
+      return `<input type="hidden" id="${inputId}" value="${escAttr(val)}">`;
+    }
+
+    // For repas service_en: auto-fill from service_fr when it's a known service type
+    if (sectionKey === 'repas' && f.key === 'service_en') {
+      const svcFr = item.service_fr || '';
+      const match = SERVICE_TYPES.find(s => s.value_fr === svcFr);
+      const autoVal = match ? match.value_en : val;
+      if (match && idx === 'new') {
+        // Auto-set via updateField
+        setTimeout(() => updateField(sectionKey, idx, 'service_en', autoVal), 0);
+      }
+      input = `<input type="text" id="${inputId}" value="${escAttr(autoVal)}" placeholder="${f.placeholder||''}"
+        oninput="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">`;
+      return `<div class="field${fullClass}">
+        <label for="${inputId}">${f.label}</label>
+        ${input}
+      </div>`;
+    }
 
     if (f.type === 'checkbox') {
       const checked = val === true || val === 'true';
@@ -1442,10 +1682,13 @@ function renderFields(fields, item, sectionKey, idx) {
         (ALLERGEN_LIST.filter(a=>!codes.includes(a.code)).length === 0 ? '<div style="padding:10px;color:var(--text-muted);font-size:0.85rem;">Tous ajoutés</div>' : '') +
         `</div></div></div>`;
     } else if (f.type === 'select') {
-      const opts = f.options.map(o =>
-        `<option value="${o.value}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`
+      const opts = (typeof f.options === 'function' ? f.options() : f.options).map(o =>
+        `<option value="${o.value}" ${String(val) === String(o.value) ? 'selected' : ''}>${o.label}</option>`
       ).join('');
-      input = `<select id="${inputId}" onchange="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">
+      // For service_fr in repas: auto-fill service_en on change
+      const extraOnChange = (sectionKey === 'repas' && f.key === 'service_fr')
+        ? `autoFillServiceEn('${idx}', this.value);` : '';
+      input = `<select id="${inputId}" onchange="updateField('${sectionKey}', '${idx}', '${f.key}', this.value); ${extraOnChange}">
         <option value="">—</option>${opts}</select>`;
     } else if (f.type === 'textarea') {
       input = `<textarea id="${inputId}" rows="3" placeholder="${f.placeholder||''}"
@@ -1460,6 +1703,16 @@ function renderFields(fields, item, sectionKey, idx) {
       ${input}
     </div>`;
   }).join('');
+}
+
+/* Auto-fill service_en when selecting service_fr */
+function autoFillServiceEn(idx, valueFr) {
+  const match = SERVICE_TYPES.find(s => s.value_fr === valueFr);
+  if (match) {
+    updateField('repas', idx, 'service_en', match.value_en);
+    const enInput = document.getElementById(`field-repas-${idx}-service_en`);
+    if (enInput) enInput.value = match.value_en;
+  }
 }
 
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -1690,7 +1943,10 @@ async function saveCurrentSection() {
 
   setLoading('save-btn', true);
   try {
+    // Save section data
     await fbPut(`data/${key}.json`, sectionData);
+    // Also save config (dates, service types, café visibility)
+    await saveConfig();
     const now = new Date();
     lastSaved[key] = now.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     toast(`${SECTIONS[key].label} sauvegarde avec succes !`);
@@ -1699,6 +1955,180 @@ async function saveCurrentSection() {
     toast('Erreur lors de la sauvegarde.', true);
   }
   setLoading('save-btn', false);
+}
+
+async function saveConfig() {
+  const config = {
+    jourOptions: JOUR_OPTIONS,
+    serviceTypes: SERVICE_TYPES,
+    cafeVisible: cafeVisible,
+  };
+  await fbPut('config/jourOptions.json', JOUR_OPTIONS);
+  await fbPut('config/serviceTypes.json', SERVICE_TYPES);
+  await fbPut('config/cafeVisible.json', cafeVisible);
+}
+
+/* ══════════════════════════════════════
+   DATE MANAGER (JOUR_OPTIONS)
+   ══════════════════════════════════════ */
+function renderDateManager() {
+  let html = '<div class="date-manager"><span style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin-right:4px;">📅 Dates :</span>';
+  JOUR_OPTIONS.forEach((j, i) => {
+    html += `<span class="date-chip">
+      ${escHtml(j.label)}
+      <span class="date-edit" onclick="editDate(${i})" title="Modifier">✏</span>
+      <span class="date-remove" onclick="removeDate(${i})" title="Supprimer">&times;</span>
+    </span>`;
+  });
+  html += `<button class="date-add-btn" onclick="addDate()">+ Jour</button>`;
+  html += '</div>';
+  return html;
+}
+
+function addDate() {
+  const val = prompt('Identifiant du jour (ex: mar-01) :');
+  if (!val || !val.trim()) return;
+  const label = prompt('Libellé du jour (ex: Mardi 1er) :');
+  if (!label || !label.trim()) return;
+  JOUR_OPTIONS.push({ value: val.trim(), label: label.trim() });
+  SECTIONS = buildSections();
+  renderSection();
+  toast('Jour ajouté (pensez à sauvegarder)');
+}
+
+function editDate(idx) {
+  const current = JOUR_OPTIONS[idx];
+  const newVal = prompt('Identifiant :', current.value);
+  if (!newVal || !newVal.trim()) return;
+  const newLabel = prompt('Libellé :', current.label);
+  if (!newLabel || !newLabel.trim()) return;
+  JOUR_OPTIONS[idx] = { value: newVal.trim(), label: newLabel.trim() };
+  SECTIONS = buildSections();
+  renderSection();
+  toast('Jour modifié (pensez à sauvegarder)');
+}
+
+function removeDate(idx) {
+  const day = JOUR_OPTIONS[idx];
+  if (!confirm(`Supprimer "${day.label}" ? Les éléments assignés à ce jour ne seront pas supprimés.`)) return;
+  JOUR_OPTIONS.splice(idx, 1);
+  SECTIONS = buildSections();
+  renderSection();
+  toast('Jour supprimé (pensez à sauvegarder)');
+}
+
+/* ══════════════════════════════════════
+   SERVICE TYPE MANAGER (REPAS)
+   ══════════════════════════════════════ */
+function renderServiceTypeManager() {
+  let html = '<div class="svc-type-manager"><span style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin-right:4px;">🍽 Types de service :</span>';
+  SERVICE_TYPES.forEach((s, i) => {
+    html += `<span class="svc-chip">
+      ${escHtml(s.value_fr)}
+      <span class="svc-edit" onclick="editServiceType(${i})" title="Modifier">✏</span>
+      <span class="svc-remove" onclick="removeServiceType(${i})" title="Supprimer">&times;</span>
+    </span>`;
+  });
+  html += `<button class="svc-add-btn" onclick="addServiceType()">+ Type</button>`;
+  html += '</div>';
+  return html;
+}
+
+function addServiceType() {
+  const fr = prompt('Nom du service (FR) :');
+  if (!fr || !fr.trim()) return;
+  const en = prompt('Nom du service (EN) :') || fr;
+  SERVICE_TYPES.push({ value_fr: fr.trim(), value_en: en.trim() });
+  SECTIONS = buildSections();
+  renderSection();
+  toast('Type de service ajouté (pensez à sauvegarder)');
+}
+
+function editServiceType(idx) {
+  const current = SERVICE_TYPES[idx];
+  const oldFr = current.value_fr;
+  const newFr = prompt('Nom (FR) :', current.value_fr);
+  if (!newFr || !newFr.trim()) return;
+  const newEn = prompt('Nom (EN) :', current.value_en);
+  if (!newEn || !newEn.trim()) return;
+  SERVICE_TYPES[idx] = { value_fr: newFr.trim(), value_en: newEn.trim() };
+  // Update existing repas items with old service name
+  (data.repas || []).forEach(item => {
+    if (item.service_fr === oldFr) {
+      item.service_fr = newFr.trim();
+      item.service_en = newEn.trim();
+    }
+  });
+  SECTIONS = buildSections();
+  renderSection();
+  toast('Type de service modifié (pensez à sauvegarder)');
+}
+
+function removeServiceType(idx) {
+  const svc = SERVICE_TYPES[idx];
+  if (!confirm(`Supprimer le type "${svc.value_fr}" ? Les plats assignés garderont leur type actuel.`)) return;
+  SERVICE_TYPES.splice(idx, 1);
+  SECTIONS = buildSections();
+  renderSection();
+  toast('Type de service supprimé (pensez à sauvegarder)');
+}
+
+/* ══════════════════════════════════════
+   CAFÉ VISIBILITY TOGGLE
+   ══════════════════════════════════════ */
+function toggleCafeVisibility(visible) {
+  cafeVisible = visible;
+  renderSection();
+  toast(visible ? 'Carte visible sur l\'app' : 'Carte masquée sur l\'app — pensez à sauvegarder');
+}
+
+/* ══════════════════════════════════════
+   HORAIRE DUPLICATION
+   ══════════════════════════════════════ */
+function duplicateHoraireDay(sourceDay) {
+  const allItems = data.horaires || [];
+  const lieu = horaireFilter;
+  const sourceItems = allItems.filter(it => (it.lieu || 'cafe') === lieu && it.jour_fr === sourceDay);
+
+  if (sourceItems.length === 0) {
+    toast('Aucun horaire à dupliquer pour ce jour.', true);
+    return;
+  }
+
+  // Get all OTHER day names for this lieu
+  const otherDays = [...new Set(
+    allItems.filter(it => (it.lieu || 'cafe') === lieu && it.jour_fr !== sourceDay).map(it => it.jour_fr)
+  )];
+
+  if (otherDays.length === 0) {
+    toast('Aucun autre jour existant. Ajoutez d\'abord des horaires pour d\'autres jours.', true);
+    return;
+  }
+
+  if (!confirm(`Dupliquer les horaires de "${sourceDay}" (${lieu === 'cafe' ? 'Café' : 'Boutique'}) sur ${otherDays.length} autre(s) jour(s) ?\n\nJours concernés : ${otherDays.join(', ')}\n\nLes horaires existants de ces jours seront remplacés.`)) return;
+
+  // For each target day, remove existing items and add copies of source
+  for (const targetDay of otherDays) {
+    // Find the EN label for target day from existing items
+    const existingTarget = allItems.find(it => (it.lieu || 'cafe') === lieu && it.jour_fr === targetDay);
+    const targetDayEn = existingTarget ? existingTarget.jour_en : targetDay;
+
+    // Remove existing items for target day + lieu
+    data.horaires = data.horaires.filter(it => !((it.lieu || 'cafe') === lieu && it.jour_fr === targetDay));
+
+    // Copy source items with target day label
+    for (const src of sourceItems) {
+      data.horaires.push({
+        ...src,
+        jour_fr: targetDay,
+        jour_en: targetDayEn,
+      });
+    }
+  }
+
+  expandedItems.horaires = new Set();
+  renderSection();
+  toast(`Horaires dupliqués sur ${otherDays.length} jour(s) (pensez à sauvegarder)`);
 }
 
 /* ══════════════════════════════════════
@@ -1813,108 +2243,236 @@ async function clearAnalytics() {
 }
 
 /* ══════════════════════════════════════
-   PREVIEW
+   PREVIEW — App-faithful rendering
    ══════════════════════════════════════ */
+let pvActiveDay = null; // Active day tab in preview
+
 function previewSection() {
   const key = currentTab;
   if (key === '__analytics__') return;
   const schema = SECTIONS[key];
   const items = data[key] || [];
 
-  document.getElementById('preview-title').textContent = 'Aperçu — ' + schema.label;
+  const sectionLabels = {
+    programme: 'Programme',
+    cafe: 'World Peace Café',
+    horaires: 'Horaires',
+    repas: 'Repas',
+    infos: 'Informations pratiques',
+    alertes: 'Alertes',
+  };
+
+  document.getElementById('preview-title').textContent = sectionLabels[key] || schema.label;
   let html = '';
 
   if (key === 'programme') {
-    const dayOrder = JOUR_OPTIONS.map(j => j.value);
-    const groups = {};
-    items.forEach(it => {
-      const d = it.jour || '';
-      if (!groups[d]) groups[d] = [];
-      groups[d].push(it);
-    });
-    const sorted = Object.keys(groups).sort((a, b) => {
-      const ia = dayOrder.indexOf(a), ib = dayOrder.indexOf(b);
-      return (ia===-1?999:ia) - (ib===-1?999:ib);
-    });
-    for (const d of sorted) {
-      html += `<div class="pv-day">${escHtml((JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d)}</div>`;
-      for (const it of groups[d]) {
-        html += `<div class="pv-item">
-          <div class="pv-item-title">${escHtml(it.titre_fr||'')}</div>
-          <div class="pv-item-sub">${escHtml(it.heure||'')} ${it.badge_fr ? '— '+escHtml(it.badge_fr) : ''}</div>
-          ${it.desc_fr ? '<div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;">'+escHtml(it.desc_fr)+'</div>' : ''}
-        </div>`;
-      }
-    }
+    html = pvRenderProgramme(items);
   } else if (key === 'repas') {
-    const dayOrder = JOUR_OPTIONS.map(j => j.value);
-    const groups = {};
-    items.forEach(it => { const d = it.jour||''; if (!groups[d]) groups[d]=[]; groups[d].push(it); });
-    const sorted = Object.keys(groups).sort((a,b) => {
-      const ia = dayOrder.indexOf(a), ib = dayOrder.indexOf(b);
-      return (ia===-1?999:ia) - (ib===-1?999:ib);
-    });
-    for (const d of sorted) {
-      html += `<div class="pv-day">${escHtml((JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d)}</div>`;
-      for (const it of groups[d]) {
-        let badges = '';
-        if (it.vegan === true || it.vegan === 'true') badges += '<span class="pv-badge pv-vegan">🌱 Végan</span>';
-        if (it.sans_gluten === true || it.sans_gluten === 'true') badges += '<span class="pv-badge pv-gf">Sans gluten</span>';
-        html += `<div class="pv-item">
-          <div class="pv-item-title">${escHtml(it.plat_fr||'')} ${badges}</div>
-          <div class="pv-item-sub">${escHtml(it.service_fr||'')} — ${escHtml(it.heure||'')}</div>
-        </div>`;
-      }
-    }
+    html = pvRenderRepas(items);
   } else if (key === 'cafe') {
-    const cats = [];
-    const catMap = {};
-    items.forEach(it => {
-      const c = it.categorie_fr || 'Autre';
-      if (!catMap[c]) { catMap[c] = []; cats.push(c); }
-      catMap[c].push(it);
-    });
-    for (const c of cats) {
-      html += `<div class="pv-cat-header">${escHtml(c)}</div>`;
-      for (const it of catMap[c]) {
-        let badges = '';
-        if (it.vegan === true || it.vegan === 'true') badges += '<span class="pv-badge pv-vegan">🌱</span>';
-        if (it.sans_gluten === true || it.sans_gluten === 'true') badges += '<span class="pv-badge pv-gf">GF</span>';
-        html += `<div class="pv-item">
-          <div class="pv-item-title">${escHtml(it.nom_fr||'')} ${badges} <span style="float:right;color:var(--saffron);font-weight:600;">${escHtml(it.prix||'')}</span></div>
-          ${it.note_fr ? '<div class="pv-item-sub">'+escHtml(it.note_fr)+'</div>' : ''}
-        </div>`;
-      }
-    }
+    html = pvRenderCafe(items);
   } else if (key === 'horaires') {
-    ['cafe', 'shop'].forEach(lieu => {
-      const lieuLabel = lieu === 'cafe' ? '☕ World Peace Café' : '🛍 Boutique';
-      const lieuItems = items.filter(it => (it.lieu||'cafe') === lieu);
-      if (lieuItems.length === 0) return;
-      html += `<div class="pv-day">${lieuLabel}</div>`;
-      lieuItems.forEach(it => {
-        html += `<div class="pv-item">
-          <div class="pv-item-title">${escHtml(it.jour_fr||'')}</div>
-          <div class="pv-item-sub">${escHtml(it.ouverture||'')} — ${escHtml(it.fermeture||'')}</div>
-        </div>`;
-      });
-    });
-  } else {
-    // Generic preview
-    items.forEach(it => {
-      html += `<div class="pv-item">
-        <div class="pv-item-title">${escHtml(it[schema.titleField]||'')}</div>
-        <div class="pv-item-sub">${escHtml(typeof schema.subField==='function'?schema.subField(it):'')}</div>
-      </div>`;
-    });
+    html = pvRenderHoraires(items);
+  } else if (key === 'infos') {
+    html = pvRenderInfos(items);
+  } else if (key === 'alertes') {
+    html = pvRenderAlertes(items);
   }
 
   if (items.length === 0) {
-    html = '<div class="empty-state">Aucun élément à prévisualiser.</div>';
+    html = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:0.9rem;">Aucun élément à prévisualiser.</div>';
   }
 
   document.getElementById('preview-body').innerHTML = html;
   document.getElementById('preview-overlay').classList.add('show');
+}
+
+function pvRenderProgramme(items) {
+  const dayOrder = JOUR_OPTIONS.map(j => j.value);
+  const availDays = [...new Set(items.map(r => r.jour))].sort((a,b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+  if (!availDays.includes(pvActiveDay)) pvActiveDay = availDays[0] || null;
+
+  let html = '<div class="pv-section-head"><h2>Programme</h2></div>';
+
+  // Day pills
+  html += '<div class="pv-day-strip">';
+  for (const d of availDays) {
+    const label = (JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d;
+    html += `<button class="pv-day-pill${d===pvActiveDay?' active':''}" onclick="pvSelectDay('${escAttr(d)}')">${escHtml(label)}</button>`;
+  }
+  html += '</div>';
+
+  // Timeline for active day
+  const dayItems = items.filter(r => r.jour === pvActiveDay);
+  html += '<div class="pv-timeline">';
+  dayItems.forEach(ev => {
+    const evType = (ev.type || 'practical').trim();
+    html += `<div class="pv-tl-event">
+      <div class="pv-tl-spine"><div class="pv-tl-dot ${evType}"></div><div class="pv-tl-line"></div></div>
+      <div class="pv-tl-card${evType==='ceremony'?' ceremony':''}">
+        <div class="pv-tl-time">${escHtml(ev.heure||'')}</div>
+        <div class="pv-tl-title">${escHtml(ev.titre_fr||'')}</div>
+        ${ev.desc_fr ? '<div class="pv-tl-desc">'+escHtml(ev.desc_fr)+'</div>' : ''}
+        ${ev.sadhana_fr ? '<div class="pv-tl-desc" style="font-style:italic;color:var(--green);margin-top:3px;">📖 Sadhana : '+escHtml(ev.sadhana_fr)+'</div>' : ''}
+        ${ev.badge_fr ? '<span class="pv-tl-badge">'+escHtml(ev.badge_fr)+'</span>' : ''}
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function pvRenderRepas(items) {
+  const dayOrder = JOUR_OPTIONS.map(j => j.value);
+  const mealDays = [...new Set(items.map(r => r.jour))].sort((a,b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+  if (!mealDays.includes(pvActiveDay)) pvActiveDay = mealDays[0] || null;
+
+  let html = '<div class="pv-section-head"><h2>Repas</h2></div>';
+
+  // Day pills
+  html += '<div class="pv-day-strip">';
+  for (const d of mealDays) {
+    const label = (JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d;
+    html += `<button class="pv-day-pill${d===pvActiveDay?' active':''}" onclick="pvSelectDay('${escAttr(d)}')">${escHtml(label)}</button>`;
+  }
+  html += '</div>';
+
+  // Group by service
+  const dayItems = items.filter(r => r.jour === pvActiveDay);
+  const services = {};
+  const svcOrder = [];
+  dayItems.forEach(r => {
+    const svc = r.service_fr || 'Autre';
+    const key = svc + '|' + (r.heure || '');
+    if (!services[key]) { services[key] = { name: svc, time: r.heure || '', dishes: [] }; svcOrder.push(key); }
+    services[key].dishes.push(r);
+  });
+
+  html += '<div style="padding:12px 12px 16px;">';
+  for (const key of svcOrder) {
+    const s = services[key];
+    html += `<div class="pv-card" style="margin:0 0 12px;">
+      <div class="pv-meal-svc">
+        <div class="pv-meal-svc-title">${escHtml(s.name)}</div>
+        <div class="pv-meal-svc-time">${escHtml(s.time)}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">`;
+    for (const d of s.dishes) {
+      let diets = [];
+      if (d.vegan === true || d.vegan === 'true') diets.push('veg');
+      if (d.sans_gluten === true || d.sans_gluten === 'true') diets.push('vgf');
+      const dietLabels = {veg:'Végétarien', vgf:'Végan SG'};
+      const allergenCodes = (d.allergenes||'').split(',').map(x=>x.trim()).filter(Boolean);
+      html += `<div class="pv-meal-dish">
+        <div class="pv-meal-dish-name">${escHtml(d.plat_fr||'')}</div>
+        ${diets.length ? '<div class="pv-diet-badges">' + diets.map(dt => '<span class="pv-diet-badge '+dt+'">'+(dietLabels[dt]||dt)+'</span>').join('') + '</div>' : ''}
+        ${allergenCodes.length ? '<div class="pv-allergen-chips">' + allergenCodes.map(c => {
+          const a = ALLERGEN_LIST.find(x=>x.code===c);
+          return '<span class="pv-allergen-chip">'+(a?a.icon+' '+a.label:c)+'</span>';
+        }).join('') + '</div>' : ''}
+      </div>`;
+    }
+    html += '</div></div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function pvRenderCafe(items) {
+  let html = '<div class="pv-section-head"><h2>World Peace Café</h2></div>';
+
+  if (!cafeVisible) {
+    html += '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:0.9rem;">🚫 La carte est masquée sur l\'app</div>';
+    return html;
+  }
+
+  // Group by category
+  const cats = {};
+  const catOrder = [];
+  items.forEach(it => {
+    const cat = it.categorie_fr || 'Autre';
+    if (!cats[cat]) { cats[cat] = []; catOrder.push(cat); }
+    cats[cat].push(it);
+  });
+
+  html += '<div style="padding:12px;"><div class="pv-card">';
+  html += '<div class="pv-card-header"><div class="pv-card-icon cafe">☕</div><div><div class="pv-card-title">World Peace Café</div></div></div>';
+
+  for (const cat of catOrder) {
+    html += `<div class="pv-menu-cat"><div class="pv-menu-cat-label">${escHtml(cat)}</div>`;
+    for (const it of cats[cat]) {
+      html += `<div class="pv-menu-row"><span class="pv-menu-name">${escHtml(it.nom_fr||'')}</span><span class="pv-menu-price">${escHtml(it.prix||'')}</span></div>`;
+    }
+    html += '</div>';
+  }
+  html += '<div class="pv-menu-note">Paiement par carte bancaire, espèces ou virement instantané.</div>';
+  html += '</div></div>';
+  return html;
+}
+
+function pvRenderHoraires(items) {
+  let html = '';
+
+  // Café hours
+  const cafeItems = items.filter(it => (it.lieu||'cafe') === 'cafe');
+  if (cafeItems.length) {
+    html += '<div style="padding:12px 12px 0;"><div class="pv-card">';
+    html += '<div class="pv-card-header"><div class="pv-card-icon cafe">☕</div><div><div class="pv-card-title">World Peace Café</div></div></div>';
+    cafeItems.forEach(it => {
+      html += `<div class="pv-hours-row"><span class="pv-hours-day">${escHtml(it.jour_fr||'')}</span><span class="pv-hours-time">${escHtml(it.ouverture||'')} – ${escHtml(it.fermeture||'')}</span></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Boutique hours
+  const shopItems = items.filter(it => it.lieu === 'shop');
+  if (shopItems.length) {
+    html += '<div style="padding:12px;"><div class="pv-card">';
+    html += '<div class="pv-card-header"><div class="pv-card-icon shop">🛍</div><div><div class="pv-card-title">Boutique du Dharma</div></div></div>';
+    shopItems.forEach(it => {
+      html += `<div class="pv-hours-row"><span class="pv-hours-day">${escHtml(it.jour_fr||'')}</span><span class="pv-hours-time">${escHtml(it.ouverture||'')} – ${escHtml(it.fermeture||'')}</span></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  return html;
+}
+
+function pvRenderInfos(items) {
+  let html = '<div class="pv-section-head"><h2>Informations pratiques</h2></div>';
+  html += '<div style="padding:12px;">';
+  items.forEach(it => {
+    html += `<div class="pv-card">
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px;">${escHtml(it.titre_fr||'')}</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${it.contenu_fr||''}</div>
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function pvRenderAlertes(items) {
+  let html = '<div class="pv-section-head"><h2>Alertes</h2></div>';
+  html += '<div style="padding:12px;">';
+  items.filter(it => it.actif === 'oui').forEach(it => {
+    html += `<div class="pv-card" style="border-left:3px solid var(--saffron);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:20px;">${it.emoji||'⚠️'}</span>
+        <span style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text);">${escHtml(it.titre_fr||'')}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${it.contenu_fr||''}</div>
+    </div>`;
+  });
+  const inactive = items.filter(it => it.actif !== 'oui');
+  if (inactive.length) {
+    html += '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">+ ' + inactive.length + ' alerte(s) inactive(s)</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function pvSelectDay(day) {
+  pvActiveDay = day;
+  previewSection();
 }
 
 function closePreview() {
