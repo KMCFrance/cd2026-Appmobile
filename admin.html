@@ -790,6 +790,28 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 .cafe-visibility-toggle label { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
 .cafe-visibility-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; }
 
+/* Repas: service sub-header per day */
+.repas-svc-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.85rem; font-weight: 600; color: var(--saffron);
+  margin: 8px 0 4px 4px; padding: 4px 0;
+}
+.repas-svc-header.disabled { color: var(--text-muted); opacity: 0.55; }
+.repas-svc-toggle {
+  width: 16px; height: 16px; accent-color: var(--saffron); cursor: pointer; margin: 0;
+}
+.repas-svc-add {
+  margin-left: auto; font-size: 0.78rem; font-weight: 500;
+  color: var(--green); background: var(--green-soft);
+  border: 1px solid var(--border-light); border-radius: 12px;
+  padding: 2px 10px; cursor: pointer; transition: background 0.15s;
+}
+.repas-svc-add:hover { background: var(--green); color: #fff; }
+.repas-svc-empty {
+  font-size: 0.8rem; color: var(--text-muted); font-style: italic;
+  padding: 4px 0 4px 20px;
+}
+
 /* Duplicate horaires button */
 .duplicate-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -949,6 +971,7 @@ let SERVICE_TYPES = [
 
 /* Café visibility flag */
 let cafeVisible = true;
+let disabledServices = {}; // { 'ven-27': ['Dîner'], ... } — services hidden per day
 
 function getJourOptions() { return JOUR_OPTIONS; }
 function getServiceOptions() {
@@ -1323,6 +1346,9 @@ async function loadData() {
       if (configResult.cafeVisible !== undefined) {
         cafeVisible = configResult.cafeVisible !== false;
       }
+      if (configResult.disabledServices && typeof configResult.disabledServices === 'object') {
+        disabledServices = configResult.disabledServices;
+      }
     }
     // Rebuild sections with loaded config
     SECTIONS = buildSections();
@@ -1353,7 +1379,7 @@ function renderSection() {
   let html = '<div class="section">';
 
   // Section header
-  const useGroupedAdd = (key === 'cafe' || key === 'horaires');
+  const useGroupedAdd = (key === 'cafe' || key === 'horaires' || key === 'repas');
   html += `<div class="section-header">
     <h3>${schema.label}</h3>
     ${!useGroupedAdd ? `<button class="btn btn-outline" onclick="toggleAdd('${key}')" id="add-toggle-${key}">
@@ -1454,27 +1480,70 @@ function renderGroupedItems(key, schema, displayItems) {
     });
 
     if (key === 'repas') {
-      // Sub-group by service type within each day
-      const svcOrder = ['Petit-déjeuner', 'Petit-dejeuner', 'Déjeuner', 'Dejeuner', 'Dîner', 'Diner'];
-      for (const day of sortedDays) {
+      // Show ALL days × ALL service types by default
+      const allDays = dayOrder; // all configured days, not just those with data
+      const daysToRender = allDays.length ? allDays : sortedDays;
+
+      for (const day of daysToRender) {
         const dayLabel = (JOUR_OPTIONS.find(j => j.value === day) || {}).label || day || 'Non défini';
         html += `<div class="group-header">${escHtml(dayLabel)}</div>`;
 
-        // Sub-group by service
+        // Build service groups from existing items for this day
         const svcGroups = {};
-        groups[day].forEach(entry => {
-          const svc = entry.item.service_fr || 'Autre';
-          if (!svcGroups[svc]) svcGroups[svc] = [];
-          svcGroups[svc].push(entry);
-        });
-        const sortedSvcs = Object.keys(svcGroups).sort((a, b) => {
-          const ia = svcOrder.findIndex(s => a.toLowerCase().includes(s.toLowerCase()));
-          const ib = svcOrder.findIndex(s => b.toLowerCase().includes(s.toLowerCase()));
-          return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-        });
+        if (groups[day]) {
+          groups[day].forEach(entry => {
+            const svc = entry.item.service_fr || 'Autre';
+            if (!svcGroups[svc]) svcGroups[svc] = [];
+            svcGroups[svc].push(entry);
+          });
+        }
 
-        for (const svc of sortedSvcs) {
-          html += `<div style="font-size:0.85rem;font-weight:600;color:var(--saffron);margin:8px 0 4px 4px;">${escHtml(svc)}</div>`;
+        // Show ALL service types (from SERVICE_TYPES), even if no dishes yet
+        const dayDisabled = disabledServices[day] || [];
+        for (const st of SERVICE_TYPES) {
+          const svcFr = st.value_fr;
+          const isDisabled = dayDisabled.includes(svcFr);
+          const dayEsc = escAttr(day);
+          const svcEsc = escAttr(svcFr);
+
+          html += `<div class="repas-svc-header${isDisabled ? ' disabled' : ''}">
+            <input type="checkbox" class="repas-svc-toggle" ${!isDisabled ? 'checked' : ''}
+              onchange="toggleRepasService('${dayEsc}','${svcEsc}',this.checked)" title="${isDisabled ? 'Activer' : 'Désactiver'} ${escHtml(svcFr)}">
+            <span>${escHtml(svcFr)}</span>
+            ${!isDisabled ? `<button class="repas-svc-add" onclick="startRepasServiceAdd('${dayEsc}','${svcEsc}')">+ Plat</button>` : ''}
+          </div>`;
+
+          if (!isDisabled) {
+            const entries = svcGroups[svcFr] || [];
+            if (entries.length === 0 && !(addingNewGroup['repas'] === day + '|' + svcFr)) {
+              html += `<div class="repas-svc-empty">Aucun plat — cliquez "+ Plat" pour ajouter</div>`;
+            }
+            for (const entry of entries) {
+              html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
+            }
+            // Inline add form for this day+service
+            if (addingNewGroup['repas'] === day + '|' + svcFr) {
+              const svcEn = st.value_en || '';
+              const prefilled = { jour: day, service_fr: svcFr, service_en: svcEn };
+              html += `<div class="add-card">
+                <div class="item-form">
+                  <h4>Nouveau plat — ${escHtml(svcFr)}</h4>
+                  <div class="form-grid">${renderFields(schema.fields, prefilled, key, 'new', true)}</div>
+                  <div style="margin-top:12px; display:flex; gap:8px;">
+                    <button class="btn btn-primary" onclick="addItem('repas')">Ajouter</button>
+                    <button class="btn btn-outline" onclick="cancelGroupAdd('repas')">Annuler</button>
+                  </div>
+                </div>
+              </div>`;
+            }
+          }
+        }
+
+        // Also show any service entries that don't match SERVICE_TYPES (legacy/custom)
+        const knownSvcs = SERVICE_TYPES.map(s => s.value_fr);
+        const extraSvcs = Object.keys(svcGroups).filter(s => !knownSvcs.includes(s));
+        for (const svc of extraSvcs) {
+          html += `<div class="repas-svc-header"><span>${escHtml(svc)}</span></div>`;
           for (const entry of svcGroups[svc]) {
             html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
           }
@@ -1491,7 +1560,7 @@ function renderGroupedItems(key, schema, displayItems) {
       }
     }
 
-    if (displayItems.length === 0) {
+    if (displayItems.length === 0 && key !== 'repas') {
       html += '<div class="empty-state">Aucun element. Cliquez sur "+ Ajouter" pour commencer.</div>';
     }
 
@@ -1636,7 +1705,8 @@ function renderFields(fields, item, sectionKey, idx, hideCategories) {
     let input;
 
     // Hide category fields when adding within a category group
-    if (hideCategories && (f.key === 'categorie_fr' || f.key === 'categorie_en')) {
+    if (hideCategories && (f.key === 'categorie_fr' || f.key === 'categorie_en'
+        || f.key === 'jour' || f.key === 'service_fr' || f.key === 'service_en')) {
       return `<input type="hidden" id="${inputId}" value="${escAttr(val)}">`;
     }
 
@@ -1817,6 +1887,20 @@ function addItem(sectionKey) {
     if (insertIdx === -1) insertIdx = data[sectionKey].length;
     data[sectionKey].splice(insertIdx, 0, newItem);
     delete addingNewGroup[sectionKey];
+  } else if (sectionKey === 'repas' && addingNewGroup[sectionKey]) {
+    // Insert after last item with matching day+service
+    const [day, svcFr] = addingNewGroup[sectionKey].split('|');
+    newItem.jour = day;
+    newItem.service_fr = svcFr;
+    const svcMatch = SERVICE_TYPES.find(s => s.value_fr === svcFr);
+    if (svcMatch) newItem.service_en = svcMatch.value_en || '';
+    let insertIdx = -1;
+    for (let i = data[sectionKey].length - 1; i >= 0; i--) {
+      if (data[sectionKey][i].jour === day && data[sectionKey][i].service_fr === svcFr) { insertIdx = i + 1; break; }
+    }
+    if (insertIdx === -1) insertIdx = data[sectionKey].length;
+    data[sectionKey].splice(insertIdx, 0, newItem);
+    delete addingNewGroup[sectionKey];
   } else {
     data[sectionKey].unshift(newItem);
   }
@@ -1875,6 +1959,30 @@ function cancelGroupAdd(sectionKey) {
   delete addingNewGroup[sectionKey];
   if (data._new) delete data._new[sectionKey];
   renderSection();
+}
+
+/* ── Repas: add dish within a day+service ── */
+function startRepasServiceAdd(day, svcFr) {
+  addingNewGroup['repas'] = day + '|' + svcFr;
+  if (!data._new) data._new = {};
+  data._new['repas'] = { jour: day, service_fr: svcFr };
+  // Auto-fill service_en from SERVICE_TYPES
+  const match = SERVICE_TYPES.find(s => s.value_fr === svcFr);
+  if (match) data._new['repas'].service_en = match.value_en || '';
+  renderSection();
+}
+
+/* ── Repas: toggle service per day ── */
+function toggleRepasService(day, svcFr, enabled) {
+  if (!disabledServices[day]) disabledServices[day] = [];
+  if (enabled) {
+    disabledServices[day] = disabledServices[day].filter(s => s !== svcFr);
+    if (disabledServices[day].length === 0) delete disabledServices[day];
+  } else {
+    if (!disabledServices[day].includes(svcFr)) disabledServices[day].push(svcFr);
+  }
+  renderSection();
+  toast(enabled ? `${svcFr} activé pour ce jour` : `${svcFr} masqué pour ce jour (pensez à sauvegarder)`);
 }
 
 /* ── Category management (café) ── */
@@ -1958,14 +2066,10 @@ async function saveCurrentSection() {
 }
 
 async function saveConfig() {
-  const config = {
-    jourOptions: JOUR_OPTIONS,
-    serviceTypes: SERVICE_TYPES,
-    cafeVisible: cafeVisible,
-  };
   await fbPut('config/jourOptions.json', JOUR_OPTIONS);
   await fbPut('config/serviceTypes.json', SERVICE_TYPES);
   await fbPut('config/cafeVisible.json', cafeVisible);
+  await fbPut('config/disabledServices.json', disabledServices);
 }
 
 /* ══════════════════════════════════════
@@ -2337,8 +2441,9 @@ function pvRenderRepas(items) {
   }
   html += '</div>';
 
-  // Group by service
-  const dayItems = items.filter(r => r.jour === pvActiveDay);
+  // Group by service (filter out disabled services for this day)
+  const dayDisabled = disabledServices[pvActiveDay] || [];
+  const dayItems = items.filter(r => r.jour === pvActiveDay && !dayDisabled.includes(r.service_fr || 'Autre'));
   const services = {};
   const svcOrder = [];
   dayItems.forEach(r => {
