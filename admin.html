@@ -546,6 +546,127 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
   line-height: 1;
 }
 .move-btns button:hover { color: var(--text); }
+
+/* Sub-filter switch (horaires café/boutique) */
+.sub-filter {
+  display: flex; gap: 0; margin-bottom: 14px;
+  background: var(--surface-alt); border-radius: var(--radius-sm);
+  padding: 3px; border: 1px solid var(--border-light);
+}
+.sub-filter button {
+  flex: 1; padding: 8px 14px; font-family: var(--font-body);
+  font-size: 0.85rem; font-weight: 500; color: var(--text-muted);
+  background: none; border: none; border-radius: 8px; cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-filter button.active {
+  background: var(--surface); color: var(--green-deep);
+  font-weight: 600; box-shadow: 0 1px 4px var(--shadow);
+}
+
+/* Group headers (day / category groups) */
+.group-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; margin: 16px 0 8px;
+  background: var(--pink-mist); border-radius: var(--radius-sm);
+  font-family: var(--font-display); font-size: 1.05rem;
+  font-weight: 600; color: var(--green-deep);
+}
+.group-header:first-child { margin-top: 0; }
+.group-header .group-actions { display: flex; gap: 6px; }
+.group-header .group-actions button {
+  background: none; border: none; cursor: pointer; font-size: 0.85rem;
+  padding: 4px 8px; border-radius: 6px; color: var(--text-muted);
+  transition: background 0.15s;
+}
+.group-header .group-actions button:hover { background: var(--border-light); }
+
+.group-add-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 14px; font-family: var(--font-body);
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--green); background: var(--green-soft);
+  border: 1px dashed var(--green); border-radius: var(--radius-sm);
+  cursor: pointer; margin: 4px 0 12px; width: 100%;
+  justify-content: center;
+}
+.group-add-btn:hover { background: var(--green); color: #fff; }
+
+/* Checkboxes végan / sans-gluten */
+.regime-checks {
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+}
+.regime-check {
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; font-size: 0.85rem; color: var(--text-secondary);
+  user-select: none;
+}
+.regime-check input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: var(--green); cursor: pointer;
+}
+
+/* Preview button */
+.btn-preview {
+  background: transparent; color: var(--green-deep);
+  border: 1px solid var(--green); padding: 10px 20px;
+  font-family: var(--font-body); font-size: 0.95rem;
+  font-weight: 600; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-preview:hover { background: var(--green-soft); }
+
+/* Preview overlay */
+.preview-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  align-items: flex-start; justify-content: center;
+  padding: 24px 16px; overflow-y: auto;
+}
+.preview-overlay.show { display: flex; }
+.preview-modal {
+  background: var(--bg); border-radius: var(--radius);
+  width: 100%; max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+.preview-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  background: var(--green-deep); color: #fff;
+}
+.preview-modal-head h3 { font-size: 1.1rem; color: #fff; }
+.preview-modal-close {
+  background: rgba(255,255,255,.15); border: none; font-size: 1.2rem;
+  cursor: pointer; color: #fff; padding: 4px 10px; border-radius: 6px;
+}
+.preview-modal-body { padding: 16px; }
+
+/* Preview item cards */
+.pv-day { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--green-deep); margin: 14px 0 8px; }
+.pv-day:first-child { margin-top: 0; }
+.pv-item {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px;
+}
+.pv-item-title { font-weight: 600; font-size: 0.95rem; }
+.pv-item-sub { font-size: 0.82rem; color: var(--text-muted); }
+.pv-badge {
+  display: inline-block; font-size: 0.72rem; padding: 2px 8px;
+  border-radius: 10px; font-weight: 600; margin-left: 6px;
+}
+.pv-vegan { background: #E8F5E9; color: #2E7D32; }
+.pv-gf { background: #FFF3E0; color: #E65100; }
+.pv-cat-header { font-size: 0.9rem; font-weight: 600; color: var(--saffron); margin: 12px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Category rename modal */
+.cat-rename-wrap {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.cat-rename-wrap input {
+  padding: 4px 8px; font-size: 0.9rem; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface); color: var(--text);
+  font-family: var(--font-body); width: 140px;
+}
 </style>
 </head>
 <body>
@@ -615,12 +736,26 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
   </div>
 
   <div class="save-bar">
+    <button class="btn-preview" id="preview-btn" onclick="previewSection()">
+      👁 Aperçu
+    </button>
     <button class="btn btn-saffron" id="save-btn" onclick="saveCurrentSection()">
       Sauvegarder cette section
     </button>
   </div>
 
   <div class="toast-container" id="toasts"></div>
+
+  <!-- Preview modal -->
+  <div class="preview-overlay" id="preview-overlay" onclick="if(event.target===this)closePreview()">
+    <div class="preview-modal">
+      <div class="preview-modal-head">
+        <h3 id="preview-title">Aperçu</h3>
+        <button class="preview-modal-close" onclick="closePreview()">✕</button>
+      </div>
+      <div class="preview-modal-body" id="preview-body"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -691,12 +826,16 @@ const SECTIONS = {
     label: 'Cafe',
     titleField: 'nom_fr',
     subField: item => `${item.categorie_fr||''} — ${item.prix||''}`,
+    groupBy: 'categorie_fr',
+    groupLabel: item => item.categorie_fr || 'Sans catégorie',
     fields: [
       { key: 'categorie_fr', label: 'Categorie (FR)', type: 'text' },
       { key: 'categorie_en', label: 'Categorie (EN)', type: 'text' },
       { key: 'nom_fr', label: 'Nom (FR)', type: 'text' },
       { key: 'nom_en', label: 'Nom (EN)', type: 'text' },
       { key: 'prix', label: 'Prix', type: 'text', placeholder: '2,50 EUR' },
+      { key: 'vegan', label: 'Végan', type: 'checkbox' },
+      { key: 'sans_gluten', label: 'Sans gluten', type: 'checkbox' },
     ],
   },
   horaires: {
@@ -725,7 +864,8 @@ const SECTIONS = {
       { key: 'heure', label: 'Heure', type: 'text', placeholder: '12h45–13h45' },
       { key: 'plat_fr', label: 'Plat (FR)', type: 'text', full: true },
       { key: 'plat_en', label: 'Plat (EN)', type: 'text', full: true },
-      { key: 'regime', label: 'Regime', type: 'text', placeholder: 'veg,vgf' },
+      { key: 'vegan', label: 'Végan', type: 'checkbox' },
+      { key: 'sans_gluten', label: 'Sans gluten', type: 'checkbox' },
       { key: 'allergenes', label: 'Allergenes', type: 'allergen-picker', full: true },
       { key: 'allergenes_note_fr', label: 'Note allergenes (FR)', type: 'text', full: true, placeholder: 'Peut contenir des traces de...' },
       { key: 'allergenes_note_en', label: 'Note allergenes (EN)', type: 'text', full: true, placeholder: 'May contain traces of...' },
@@ -768,8 +908,11 @@ const SECTIONS = {
 let data = {};
 let currentTab = 'programme';
 let addingNew = {};   // { sectionKey: true } if the "add" form is open
+let addingNewGroup = {};  // { sectionKey: groupKey } — add within a specific group
 let expandedItems = {}; // { sectionKey: Set of indices }
 let lastSaved = {};   // { sectionKey: timestamp string }
+let horaireFilter = 'cafe'; // 'cafe' or 'shop'
+let renamingCat = null; // { fr: oldName, newFr: '', newEn: '' }
 
 /* ══════════════════════════════════════
    UTILS
@@ -984,8 +1127,10 @@ function switchTab(key) {
   if (key === '__analytics__') {
     renderAnalytics();
     document.getElementById('save-btn').style.display = 'none';
+    document.getElementById('preview-btn').style.display = 'none';
   } else {
     document.getElementById('save-btn').style.display = '';
+    document.getElementById('preview-btn').style.display = '';
     renderSection();
   }
 }
@@ -1015,25 +1160,37 @@ async function loadData() {
 function renderSection() {
   const key = currentTab;
   const schema = SECTIONS[key];
-  const items = data[key] || [];
+  let items = data[key] || [];
   const content = document.getElementById('section-content');
 
   if (!expandedItems[key]) expandedItems[key] = new Set();
 
   let html = '<div class="section">';
+
+  // Section header
+  const useGroupedAdd = (key === 'cafe' || key === 'horaires');
   html += `<div class="section-header">
     <h3>${schema.label}</h3>
-    <button class="btn btn-outline" onclick="toggleAdd('${key}')" id="add-toggle-${key}">
+    ${!useGroupedAdd ? `<button class="btn btn-outline" onclick="toggleAdd('${key}')" id="add-toggle-${key}">
       ${addingNew[key] ? 'Annuler' : '+ Ajouter'}
-    </button>
+    </button>` : ''}
   </div>`;
 
   if (lastSaved[key]) {
     html += `<div class="section-meta">Derniere sauvegarde : ${lastSaved[key]}</div>`;
   }
 
-  // Add new item form
-  if (addingNew[key]) {
+  // ── Horaires: café/boutique sub-filter ──
+  if (key === 'horaires') {
+    html += `<div class="sub-filter">
+      <button class="${horaireFilter==='cafe'?'active':''}" onclick="setHoraireFilter('cafe')">☕ World Peace Café</button>
+      <button class="${horaireFilter==='shop'?'active':''}" onclick="setHoraireFilter('shop')">🛍 Boutique</button>
+    </div>`;
+    items = items.filter(it => (it.lieu || 'cafe') === horaireFilter);
+  }
+
+  // ── Global "add new" form (for non-grouped sections) ──
+  if (addingNew[key] && !useGroupedAdd) {
     html += `<div class="add-card">
       <div class="item-form">
         <h4>Nouvel element</h4>
@@ -1046,39 +1203,211 @@ function renderSection() {
     </div>`;
   }
 
-  if (items.length === 0 && !addingNew[key]) {
-    html += '<div class="empty-state">Aucun element. Cliquez sur "+ Ajouter" pour commencer.</div>';
+  // ── Determine if we group items ──
+  const grouped = (key === 'programme' || key === 'repas' || key === 'cafe' || key === 'horaires');
+
+  if (grouped) {
+    html += renderGroupedItems(key, schema, items);
+  } else {
+    if (items.length === 0 && !addingNew[key]) {
+      html += '<div class="empty-state">Aucun element. Cliquez sur "+ Ajouter" pour commencer.</div>';
+    }
+    const allItems = data[key] || [];
+    allItems.forEach((item, idx) => {
+      html += renderItemCard(key, schema, item, idx, allItems.length);
+    });
   }
-
-  // Existing items
-  items.forEach((item, idx) => {
-    const isOpen = expandedItems[key].has(idx);
-    const title = item[schema.titleField] || '(sans titre)';
-    const sub = typeof schema.subField === 'function' ? schema.subField(item) : '';
-
-    html += `<div class="item-card">
-      <div class="item-summary">
-        <div class="move-btns">
-          <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, -1)" title="Monter" ${idx===0?'disabled':''}>&#9650;</button>
-          <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, 1)" title="Descendre" ${idx===items.length-1?'disabled':''}>&#9660;</button>
-        </div>
-        <div class="item-summary-text" onclick="toggleItem('${key}', ${idx})">
-          <div class="item-title">${escHtml(title)}</div>
-          <div class="item-sub">${escHtml(sub)}</div>
-        </div>
-        <div class="item-actions">
-          <button onclick="toggleItem('${key}', ${idx})" title="${isOpen ? 'Fermer' : 'Editer'}">${isOpen ? '&#9650;' : '&#9998;'}</button>
-          <button class="btn-delete" onclick="deleteItem('${key}', ${idx})" title="Supprimer">&#128465;</button>
-        </div>
-      </div>
-      <div class="item-form ${isOpen ? 'open' : ''}" id="form-${key}-${idx}">
-        <div class="form-grid">${renderFields(schema.fields, item, key, idx)}</div>
-      </div>
-    </div>`;
-  });
 
   html += '</div>';
   content.innerHTML = html;
+}
+
+/* ── Grouped items rendering ── */
+function renderGroupedItems(key, schema, displayItems) {
+  let html = '';
+  const allItems = data[key] || [];
+
+  if (key === 'programme' || key === 'repas') {
+    // Group by jour
+    const dayOrder = JOUR_OPTIONS.map(j => j.value);
+    const groups = {};
+    displayItems.forEach((item, _) => {
+      const realIdx = allItems.indexOf(item);
+      const day = item.jour || '';
+      if (!groups[day]) groups[day] = [];
+      groups[day].push({ item, realIdx });
+    });
+
+    // Sort days
+    const sortedDays = Object.keys(groups).sort((a, b) => {
+      const ia = dayOrder.indexOf(a), ib = dayOrder.indexOf(b);
+      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+    });
+
+    if (key === 'repas') {
+      // Sub-group by service type within each day
+      const svcOrder = ['Petit-déjeuner', 'Petit-dejeuner', 'Déjeuner', 'Dejeuner', 'Dîner', 'Diner'];
+      for (const day of sortedDays) {
+        const dayLabel = (JOUR_OPTIONS.find(j => j.value === day) || {}).label || day || 'Non défini';
+        html += `<div class="group-header">${escHtml(dayLabel)}</div>`;
+
+        // Sub-group by service
+        const svcGroups = {};
+        groups[day].forEach(entry => {
+          const svc = entry.item.service_fr || 'Autre';
+          if (!svcGroups[svc]) svcGroups[svc] = [];
+          svcGroups[svc].push(entry);
+        });
+        const sortedSvcs = Object.keys(svcGroups).sort((a, b) => {
+          const ia = svcOrder.findIndex(s => a.toLowerCase().includes(s.toLowerCase()));
+          const ib = svcOrder.findIndex(s => b.toLowerCase().includes(s.toLowerCase()));
+          return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+        });
+
+        for (const svc of sortedSvcs) {
+          html += `<div style="font-size:0.85rem;font-weight:600;color:var(--saffron);margin:8px 0 4px 4px;">${escHtml(svc)}</div>`;
+          for (const entry of svcGroups[svc]) {
+            html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
+          }
+        }
+      }
+    } else {
+      // Programme: just group by day
+      for (const day of sortedDays) {
+        const dayLabel = (JOUR_OPTIONS.find(j => j.value === day) || {}).label || day || 'Non défini';
+        html += `<div class="group-header">${escHtml(dayLabel)}</div>`;
+        for (const entry of groups[day]) {
+          html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
+        }
+      }
+    }
+
+    if (displayItems.length === 0) {
+      html += '<div class="empty-state">Aucun element. Cliquez sur "+ Ajouter" pour commencer.</div>';
+    }
+
+  } else if (key === 'cafe') {
+    // Group by categorie_fr
+    const categories = [];
+    const catMap = {};
+    allItems.forEach((item, idx) => {
+      const cat = item.categorie_fr || 'Sans catégorie';
+      if (!catMap[cat]) { catMap[cat] = []; categories.push(cat); }
+      catMap[cat].push({ item, realIdx: idx });
+    });
+
+    if (categories.length === 0 && !addingNewGroup[key]) {
+      html += '<div class="empty-state">Aucun element.</div>';
+    }
+
+    for (const cat of categories) {
+      const catEsc = escAttr(cat);
+      html += `<div class="group-header">
+        <span>${escHtml(cat)}</span>
+        <div class="group-actions">
+          <button onclick="renameCategoryPrompt('${catEsc}')" title="Renommer">&#9998;</button>
+          <button onclick="deleteCategory('${catEsc}')" title="Supprimer catégorie" style="color:var(--danger);">&#128465;</button>
+        </div>
+      </div>`;
+
+      for (const entry of catMap[cat]) {
+        html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
+      }
+
+      // Add within category button
+      if (addingNewGroup[key] === cat) {
+        html += `<div class="add-card">
+          <div class="item-form">
+            <h4>Nouvel element — ${escHtml(cat)}</h4>
+            <div class="form-grid">${renderFields(schema.fields, { categorie_fr: cat }, key, 'new')}</div>
+            <div style="margin-top:12px; display:flex; gap:8px;">
+              <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
+              <button class="btn btn-outline" onclick="cancelGroupAdd('${key}')">Annuler</button>
+            </div>
+          </div>
+        </div>`;
+      } else {
+        html += `<button class="group-add-btn" onclick="startGroupAdd('cafe', '${catEsc}')">+ Ajouter dans ${escHtml(cat)}</button>`;
+      }
+    }
+
+    // Add new category
+    html += `<div style="margin-top:16px; border-top: 1px dashed var(--border); padding-top: 14px;">
+      <button class="btn btn-outline" onclick="addCategoryPrompt()" style="width:100%;">+ Nouvelle catégorie</button>
+    </div>`;
+
+  } else if (key === 'horaires') {
+    // Horaires — items already filtered by lieu. Group by jour_fr
+    const dayGroups = {};
+    const dayOrder = [];
+    displayItems.forEach(item => {
+      const realIdx = allItems.indexOf(item);
+      const day = item.jour_fr || 'Non défini';
+      if (!dayGroups[day]) { dayGroups[day] = []; dayOrder.push(day); }
+      dayGroups[day].push({ item, realIdx });
+    });
+
+    for (const day of dayOrder) {
+      html += `<div class="group-header">${escHtml(day)}</div>`;
+      for (const entry of dayGroups[day]) {
+        html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
+      }
+    }
+
+    // Add within current filter
+    if (addingNew[key]) {
+      html += `<div class="add-card">
+        <div class="item-form">
+          <h4>Nouvel horaire — ${horaireFilter === 'cafe' ? 'Café' : 'Boutique'}</h4>
+          <div class="form-grid">${renderFields(schema.fields, { lieu: horaireFilter }, key, 'new')}</div>
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
+            <button class="btn btn-outline" onclick="toggleAdd('${key}')">Annuler</button>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      html += `<button class="group-add-btn" onclick="toggleAdd('horaires')">+ Ajouter un horaire</button>`;
+    }
+
+    if (displayItems.length === 0 && !addingNew[key]) {
+      html += `<div class="empty-state">Aucun horaire pour ${horaireFilter === 'cafe' ? 'le café' : 'la boutique'}.</div>`;
+    }
+  }
+
+  return html;
+}
+
+/* ── Single item card (move buttons RIGHT of delete) ── */
+function renderItemCard(key, schema, item, idx, totalCount) {
+  const isOpen = expandedItems[key].has(idx);
+  const title = item[schema.titleField] || '(sans titre)';
+  const sub = typeof schema.subField === 'function' ? schema.subField(item) : '';
+
+  // Regime badges
+  let badges = '';
+  if (item.vegan === true || item.vegan === 'true') badges += ' <span class="pv-badge pv-vegan">🌱</span>';
+  if (item.sans_gluten === true || item.sans_gluten === 'true') badges += ' <span class="pv-badge pv-gf">GF</span>';
+
+  return `<div class="item-card">
+    <div class="item-summary">
+      <div class="item-summary-text" onclick="toggleItem('${key}', ${idx})">
+        <div class="item-title">${escHtml(title)}${badges}</div>
+        <div class="item-sub">${escHtml(sub)}</div>
+      </div>
+      <div class="item-actions">
+        <button onclick="toggleItem('${key}', ${idx})" title="${isOpen ? 'Fermer' : 'Editer'}">${isOpen ? '&#9650;' : '&#9998;'}</button>
+        <button class="btn-delete" onclick="deleteItem('${key}', ${idx})" title="Supprimer">&#128465;</button>
+      </div>
+      <div class="move-btns">
+        <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, -1)" title="Monter" ${idx===0?'disabled':''}>&#9650;</button>
+        <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, 1)" title="Descendre" ${idx===totalCount-1?'disabled':''}>&#9660;</button>
+      </div>
+    </div>
+    <div class="item-form ${isOpen ? 'open' : ''}" id="form-${key}-${idx}">
+      <div class="form-grid">${renderFields(schema.fields, item, key, idx)}</div>
+    </div>
+  </div>`;
 }
 
 function renderFields(fields, item, sectionKey, idx) {
@@ -1088,7 +1417,15 @@ function renderFields(fields, item, sectionKey, idx) {
     const fullClass = f.full ? ' full' : '';
     let input;
 
-    if (f.type === 'allergen-picker') {
+    if (f.type === 'checkbox') {
+      const checked = val === true || val === 'true';
+      input = `<label class="regime-check">
+        <input type="checkbox" id="${inputId}" ${checked ? 'checked' : ''}
+          onchange="updateField('${sectionKey}', '${idx}', '${f.key}', this.checked)">
+        ${f.label}
+      </label>`;
+      return `<div class="field">${input}</div>`;
+    } else if (f.type === 'allergen-picker') {
       const codes = String(val||'').split(',').map(x=>x.trim()).filter(Boolean);
       const tags = codes.map(c => {
         const a = ALLERGEN_LIST.find(x=>x.code===c);
@@ -1126,7 +1463,7 @@ function renderFields(fields, item, sectionKey, idx) {
 }
 
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ── Allergen picker helpers ── */
 function toggleAllergenDrop(pickerId) {
@@ -1207,20 +1544,35 @@ function addItem(sectionKey) {
   // Collect values from the "new" temp store
   const temp = (data._new && data._new[sectionKey]) || {};
   schema.fields.forEach(f => {
-    newItem[f.key] = temp[f.key] || f.default || '';
+    newItem[f.key] = temp[f.key] !== undefined ? temp[f.key] : (f.default || '');
   });
 
+  // For horaires, pre-fill lieu from filter
+  if (sectionKey === 'horaires' && !newItem.lieu) {
+    newItem.lieu = horaireFilter;
+  }
+
   if (!data[sectionKey]) data[sectionKey] = [];
-  data[sectionKey].unshift(newItem);
+
+  // For café grouped add, insert after last item in that category
+  if (sectionKey === 'cafe' && addingNewGroup[sectionKey]) {
+    const cat = addingNewGroup[sectionKey];
+    let insertIdx = -1;
+    for (let i = data[sectionKey].length - 1; i >= 0; i--) {
+      if (data[sectionKey][i].categorie_fr === cat) { insertIdx = i + 1; break; }
+    }
+    if (insertIdx === -1) insertIdx = data[sectionKey].length;
+    data[sectionKey].splice(insertIdx, 0, newItem);
+    delete addingNewGroup[sectionKey];
+  } else {
+    data[sectionKey].unshift(newItem);
+  }
+
   addingNew[sectionKey] = false;
   if (data._new) delete data._new[sectionKey];
 
-  // Shift expanded indices
-  if (expandedItems[sectionKey]) {
-    const shifted = new Set();
-    expandedItems[sectionKey].forEach(i => shifted.add(i + 1));
-    expandedItems[sectionKey] = shifted;
-  }
+  // Reset expanded indices (simpler than adjusting after insert)
+  expandedItems[sectionKey] = new Set();
 
   renderSection();
   toast('Element ajoute (pensez a sauvegarder)');
@@ -1245,6 +1597,71 @@ function deleteItem(sectionKey, idx) {
 
   renderSection();
   toast('Element supprime (pensez a sauvegarder)');
+}
+
+/* ── Horaire filter ── */
+function setHoraireFilter(val) {
+  horaireFilter = val;
+  renderSection();
+}
+
+/* ── Grouped add (café categories) ── */
+function startGroupAdd(sectionKey, groupVal) {
+  addingNewGroup[sectionKey] = groupVal;
+  // Pre-fill category
+  if (!data._new) data._new = {};
+  if (!data._new[sectionKey]) data._new[sectionKey] = {};
+  data._new[sectionKey].categorie_fr = groupVal;
+  // Find matching en category from existing items
+  const match = (data[sectionKey]||[]).find(it => it.categorie_fr === groupVal);
+  if (match) data._new[sectionKey].categorie_en = match.categorie_en || '';
+  renderSection();
+}
+
+function cancelGroupAdd(sectionKey) {
+  delete addingNewGroup[sectionKey];
+  if (data._new) delete data._new[sectionKey];
+  renderSection();
+}
+
+/* ── Category management (café) ── */
+function addCategoryPrompt() {
+  const name = prompt('Nom de la nouvelle catégorie (FR) :');
+  if (!name || !name.trim()) return;
+  const nameEn = prompt('Nom en anglais (EN) :') || name;
+  // Create an empty item placeholder in that category
+  startGroupAdd('cafe', name.trim());
+  if (data._new && data._new.cafe) {
+    data._new.cafe.categorie_en = nameEn.trim();
+  }
+  renderSection();
+}
+
+function renameCategoryPrompt(oldCat) {
+  const newFr = prompt('Nouveau nom (FR) :', oldCat);
+  if (!newFr || !newFr.trim() || newFr.trim() === oldCat) return;
+  const newEn = prompt('Nouveau nom (EN) :') || newFr;
+  // Rename all items with this category
+  (data.cafe || []).forEach(item => {
+    if (item.categorie_fr === oldCat) {
+      item.categorie_fr = newFr.trim();
+      item.categorie_en = newEn.trim();
+    }
+  });
+  renderSection();
+  toast('Catégorie renommée (pensez à sauvegarder)');
+}
+
+function deleteCategory(cat) {
+  const items = (data.cafe || []).filter(it => it.categorie_fr === cat);
+  if (items.length > 0) {
+    if (!confirm(`Supprimer la catégorie "${cat}" et ses ${items.length} élément(s) ?`)) return;
+    data.cafe = (data.cafe || []).filter(it => it.categorie_fr !== cat);
+  }
+  // Reset expanded indices
+  expandedItems.cafe = new Set();
+  renderSection();
+  toast('Catégorie supprimée (pensez à sauvegarder)');
 }
 
 function moveItem(sectionKey, idx, direction) {
@@ -1393,6 +1810,115 @@ async function clearAnalytics() {
   } catch(e) {
     toast('Erreur lors de la suppression.', true);
   }
+}
+
+/* ══════════════════════════════════════
+   PREVIEW
+   ══════════════════════════════════════ */
+function previewSection() {
+  const key = currentTab;
+  if (key === '__analytics__') return;
+  const schema = SECTIONS[key];
+  const items = data[key] || [];
+
+  document.getElementById('preview-title').textContent = 'Aperçu — ' + schema.label;
+  let html = '';
+
+  if (key === 'programme') {
+    const dayOrder = JOUR_OPTIONS.map(j => j.value);
+    const groups = {};
+    items.forEach(it => {
+      const d = it.jour || '';
+      if (!groups[d]) groups[d] = [];
+      groups[d].push(it);
+    });
+    const sorted = Object.keys(groups).sort((a, b) => {
+      const ia = dayOrder.indexOf(a), ib = dayOrder.indexOf(b);
+      return (ia===-1?999:ia) - (ib===-1?999:ib);
+    });
+    for (const d of sorted) {
+      html += `<div class="pv-day">${escHtml((JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d)}</div>`;
+      for (const it of groups[d]) {
+        html += `<div class="pv-item">
+          <div class="pv-item-title">${escHtml(it.titre_fr||'')}</div>
+          <div class="pv-item-sub">${escHtml(it.heure||'')} ${it.badge_fr ? '— '+escHtml(it.badge_fr) : ''}</div>
+          ${it.desc_fr ? '<div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;">'+escHtml(it.desc_fr)+'</div>' : ''}
+        </div>`;
+      }
+    }
+  } else if (key === 'repas') {
+    const dayOrder = JOUR_OPTIONS.map(j => j.value);
+    const groups = {};
+    items.forEach(it => { const d = it.jour||''; if (!groups[d]) groups[d]=[]; groups[d].push(it); });
+    const sorted = Object.keys(groups).sort((a,b) => {
+      const ia = dayOrder.indexOf(a), ib = dayOrder.indexOf(b);
+      return (ia===-1?999:ia) - (ib===-1?999:ib);
+    });
+    for (const d of sorted) {
+      html += `<div class="pv-day">${escHtml((JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d)}</div>`;
+      for (const it of groups[d]) {
+        let badges = '';
+        if (it.vegan === true || it.vegan === 'true') badges += '<span class="pv-badge pv-vegan">🌱 Végan</span>';
+        if (it.sans_gluten === true || it.sans_gluten === 'true') badges += '<span class="pv-badge pv-gf">Sans gluten</span>';
+        html += `<div class="pv-item">
+          <div class="pv-item-title">${escHtml(it.plat_fr||'')} ${badges}</div>
+          <div class="pv-item-sub">${escHtml(it.service_fr||'')} — ${escHtml(it.heure||'')}</div>
+        </div>`;
+      }
+    }
+  } else if (key === 'cafe') {
+    const cats = [];
+    const catMap = {};
+    items.forEach(it => {
+      const c = it.categorie_fr || 'Autre';
+      if (!catMap[c]) { catMap[c] = []; cats.push(c); }
+      catMap[c].push(it);
+    });
+    for (const c of cats) {
+      html += `<div class="pv-cat-header">${escHtml(c)}</div>`;
+      for (const it of catMap[c]) {
+        let badges = '';
+        if (it.vegan === true || it.vegan === 'true') badges += '<span class="pv-badge pv-vegan">🌱</span>';
+        if (it.sans_gluten === true || it.sans_gluten === 'true') badges += '<span class="pv-badge pv-gf">GF</span>';
+        html += `<div class="pv-item">
+          <div class="pv-item-title">${escHtml(it.nom_fr||'')} ${badges} <span style="float:right;color:var(--saffron);font-weight:600;">${escHtml(it.prix||'')}</span></div>
+          ${it.note_fr ? '<div class="pv-item-sub">'+escHtml(it.note_fr)+'</div>' : ''}
+        </div>`;
+      }
+    }
+  } else if (key === 'horaires') {
+    ['cafe', 'shop'].forEach(lieu => {
+      const lieuLabel = lieu === 'cafe' ? '☕ World Peace Café' : '🛍 Boutique';
+      const lieuItems = items.filter(it => (it.lieu||'cafe') === lieu);
+      if (lieuItems.length === 0) return;
+      html += `<div class="pv-day">${lieuLabel}</div>`;
+      lieuItems.forEach(it => {
+        html += `<div class="pv-item">
+          <div class="pv-item-title">${escHtml(it.jour_fr||'')}</div>
+          <div class="pv-item-sub">${escHtml(it.ouverture||'')} — ${escHtml(it.fermeture||'')}</div>
+        </div>`;
+      });
+    });
+  } else {
+    // Generic preview
+    items.forEach(it => {
+      html += `<div class="pv-item">
+        <div class="pv-item-title">${escHtml(it[schema.titleField]||'')}</div>
+        <div class="pv-item-sub">${escHtml(typeof schema.subField==='function'?schema.subField(it):'')}</div>
+      </div>`;
+    });
+  }
+
+  if (items.length === 0) {
+    html = '<div class="empty-state">Aucun élément à prévisualiser.</div>';
+  }
+
+  document.getElementById('preview-body').innerHTML = html;
+  document.getElementById('preview-overlay').classList.add('show');
+}
+
+function closePreview() {
+  document.getElementById('preview-overlay').classList.remove('show');
 }
 
 /* ══════════════════════════════════════
