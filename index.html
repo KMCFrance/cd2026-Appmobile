@@ -265,7 +265,7 @@ a:hover { text-decoration: underline; }
   text-shadow: 0 1px 8px rgba(0,0,0,0.3);
 }
 .splash .splash-loader {
-  margin-top: 28px;
+  margin: 28px auto 0;
   width: 30px; height: 30px;
   border: 3px solid rgba(255,255,255,0.25);
   border-top-color: #fff;
@@ -2385,6 +2385,7 @@ function melange(hex, autre, part) {
   const a = rgbOf(hex), b = rgbOf(autre);
   return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * part).toString(16).padStart(2, '0')).join('');
 }
+const COULEUR_APP_PAR_GROUPE = false;
 const THEME_VARS = ['--pink', '--pink-deep', '--coral', '--saffron', '--nav-active', '--pink-soft', '--saffron-soft', '--on-accent'];
 function contraste(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
 // Assombrit (vers le noir) ou éclaircit (vers le blanc) une couleur jusqu'à un contraste suffisant avec le fond
@@ -2398,8 +2399,10 @@ function couleurCss(nom) { return getComputedStyle(document.documentElement).get
 function applyGroupeTheme() {
   const root = document.documentElement.style;
   THEME_VARS.forEach(v => root.removeProperty(v));
+  // Décision du 23/11 : l'app garde toujours ses couleurs (écran d'accueil, fenêtres, onglets).
+  // La couleur du groupe ne sert qu'à le repérer (pastille, « Votre salle »).
   const g = monGroupe();
-  if (!g || !groupeThemeOn) return;
+  if (!g || !groupeThemeOn || !COULEUR_APP_PAR_GROUPE) return;
   const c = couleurOk(g.couleur);
   // Fonds du thème actuel (clair ou sombre), lus sans la couleur du groupe
   const surface = couleurOk(couleurCss('--surface')) !== '#999999' ? couleurCss('--surface') : '#ffffff';

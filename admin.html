@@ -1509,19 +1509,9 @@ function renderSection() {
     </div>`;
   }
 
-  // ── Groupes : couleur de l'app ──
+  // ── Groupes : explication ──
   if (key === 'groupes') {
-    html += `<div class="cafe-visibility-toggle">
-      <label>
-        <input type="checkbox" ${groupeTheme ? 'checked' : ''}
-          onchange="toggleGroupeTheme(this.checked)">
-        Colorer l'application avec la couleur du groupe choisi
-      </label>
-      <span style="font-size:0.78rem;color:var(--text-muted);margin-left:auto;">
-        ${groupeTheme ? '🎨 Activé' : 'Couleurs habituelles'}
-      </span>
-    </div>
-    <div style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px;line-height:1.4">
+    html += `<div style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px;line-height:1.4">
       Les participants choisissent leur groupe (la couleur de leur badge) au premier lancement de l'app.
       La salle de chaque groupe se règle séance par séance, dans l'onglet Programme.
     </div>`;
