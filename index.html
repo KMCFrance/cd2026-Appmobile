@@ -950,6 +950,7 @@ a:hover { text-decoration: underline; }
   font-size: 16px; font-weight: 600;
   color: var(--text); line-height: 1.3;
 }
+.now-next-salle { font-family: var(--font-body); font-weight: 800; white-space: nowrap; color: var(--pink); }
 .now-next-meta {
   font-size: 12px; color: var(--text-muted);
   margin-top: 1px;
@@ -2159,10 +2160,14 @@ function toggleRead(id, checked) {
 function nowNextSalle(ev) {
   const g = monGroupe();
   const sa = ev && ev.salles;
-  if (!sa || typeof sa !== 'object') return '';
-  if (g && sa[g.code]) return ' · 📍 ' + esc(salleLabel(sa[g.code]));
-  const vals = [...new Set(groupesListe().map(x => sa[x.code]).filter(Boolean))];
-  return vals.length === 1 && groupesListe().every(x => sa[x.code]) ? ' · 📍 ' + esc(salleLabel(vals[0])) : '';
+  if (!sa || typeof sa !== 'object' || !groupesListe().length) return '';
+  let v = null;
+  if (g) v = sa[g.code] || null;
+  else {
+    const vals = [...new Set(groupesListe().map(x => sa[x.code]).filter(Boolean))];
+    if (vals.length === 1 && groupesListe().every(x => sa[x.code])) v = vals[0];
+  }
+  return v ? ' <span class="now-next-salle">· 📍 ' + esc(salleCourt(v)) + '</span>' : '';
 }
 
 function renderNowNext() {
@@ -2202,8 +2207,8 @@ function renderNowNext() {
     const meta = s.ev.heure || '';
     const dayLabel = t(DAY_LABELS[s.ev.jour] || { fr: s.ev.jour, en: s.ev.jour });
     return '<div class="now-next-item"><div class="now-next-label ' + type + '">' + label + '</div>' +
-      '<div class="now-next-title">' + title + '</div>' +
-      '<div class="now-next-meta">' + dayLabel + ' · ' + meta + nowNextSalle(s.ev) + '</div></div>';
+      '<div class="now-next-title">' + title + nowNextSalle(s.ev) + '</div>' +
+      '<div class="now-next-meta">' + dayLabel + ' · ' + meta + '</div></div>';
   }
 
   let html = '<div class="now-next">';
@@ -2314,6 +2319,13 @@ const SALLES_APP = {
   familles: { fr: 'Salle de retransmission familles', en: 'Family relay room' },
 };
 const salleLabel = v => t(SALLES_APP[v] || { fr: v, en: v });
+// Nom court (carte « En ce moment / Prochainement »)
+const SALLES_COURT = {
+  smp:      { fr: 'SMP', en: 'Main room' },
+  retrans:  { fr: 'Retransmission', en: 'Relay marquee' },
+  familles: { fr: 'Salle familles', en: 'Family room' },
+};
+const salleCourt = v => t(SALLES_COURT[v] || { fr: v, en: v });
 function groupesListe() { return (sheetData.groupes || []).filter(g => g && g.code); }
 function groupeNom(g) { return (lang === 'en' ? (g.nom_en || g.nom_fr) : g.nom_fr) || g.code; }
 function couleurOk(c) { return /^#[0-9a-f]{6}$/i.test(String(c || '')) ? c : '#999999'; }
