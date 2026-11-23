@@ -386,7 +386,6 @@ a:hover { text-decoration: underline; }
   font-size: 13px; font-weight: 700; white-space: nowrap;
   box-shadow: 0 2px 6px var(--shadow-md);
 }
-.carte-btn.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
 .section-head h2 {
   font-family: var(--font-display);
   font-size: 24px; font-weight: 700;
@@ -1153,6 +1152,9 @@ a:hover { text-decoration: underline; }
 </div>
 
 <!-- Allergen modal -->
+<div class="allergen-overlay" id="carteOverlay" onclick="if (event.target === this) closeCarte()">
+  <div class="allergen-modal" id="carteModal"></div>
+</div>
 <div class="allergen-overlay" id="allergenOverlay" onclick="closeAllergenModal(event)">
   <div class="allergen-modal" id="allergenModal"></div>
 </div>
@@ -1398,7 +1400,7 @@ const DAY_LABELS = {
 let lang = 'fr';
 let activeDay = 'ven-27';
 let activeMealDay = 'ven-27';
-let activeCafeDay = '__carte__';
+let activeCafeDay = null;
 let activeBoutiqueDay = 'ven-27';
 let groupeThemeOn = true;   // réglage Firebase config/groupeTheme : couleur de l'app selon le groupe
 let cafeCarteVisible = true; // loaded from Firebase config
@@ -1556,12 +1558,32 @@ let jourProgChoisi = false;
 function selectDay(k) { activeDay = k; jourProgChoisi = true; renderSchedule(); }
 function selectMealDay(k) { activeMealDay = k; renderMeals(); }
 function selectCafeDay(k) { activeCafeDay = k; cafeDayChoisi = true; renderCafe(); }
-// Bouton « Voir la carte » / « Horaires » à côté du titre du café
-function toggleCarteCafe() {
-  if (activeCafeDay !== '__carte__') { selectCafeDay('__carte__'); return; }
-  const jours = hoursByDay('cafe').days;
-  if (jours.length) selectCafeDay(dayParDefaut(jours));
+// Carte du café en fenêtre (bouton « Voir la carte » à côté du titre)
+function remplirCarte(items) {
+  const cats = {};
+  items.forEach(it => {
+    const cat = lang === 'en' ? (it.categorie_en || it.categorie_fr) : it.categorie_fr;
+    if (!cats[cat]) cats[cat] = [];
+    cats[cat].push(it);
+  });
+  document.getElementById('carteModal').innerHTML =
+    '<div class="allergen-modal-title">🍽 ' + (lang === 'fr' ? 'La carte' : 'Menu') + '</div>' +
+    '<div class="allergen-modal-sub">World Peace Café</div>' +
+    Object.entries(cats).map(([cat, its]) =>
+      '<div class="menu-cat"><div class="menu-cat-label">' + esc(cat) + '</div>' +
+      its.map(it => '<div class="menu-row"><span class="menu-name">' + esc(lang === 'en' ? (it.nom_en||it.nom_fr) : it.nom_fr) + dietBadgesHtml(it) + '</span><span class="menu-price">' + esc(it.prix||'') + '</span></div>').join('') +
+      '</div>').join('') +
+    '<div class="menu-note">' + t(I18N.cafe_note) + '</div>' +
+    '<button class="allergen-close" onclick="closeCarte()">' + (lang === 'fr' ? 'Fermer' : 'Close') + '</button>';
 }
+function toggleCarteCafe() {
+  const items = sheetData.cafe || FALLBACK_CAFE;
+  if (!items.length) return;
+  remplirCarte(items);
+  document.getElementById('carteOverlay').classList.add('show');
+  trackSection('cafe-carte');
+}
+function closeCarte() { document.getElementById('carteOverlay').classList.remove('show'); }
 function selectBoutiqueDay(k) { activeBoutiqueDay = k; boutiqueDayChoisi = true; renderBoutique(); }
 
 // ── Schedule (from Sheet or fallback) ──
@@ -1670,44 +1692,26 @@ function renderCafe() {
   const cafeDayMap = cafeHours.map;
   const cafeDays = cafeHours.days;
 
-  // Add "Voir la carte" as special tab (only if visible in config)
-  const allTabs = cafeCarteVisible ? [...cafeDays, '__carte__'] : [...cafeDays];
   if (!cafeDayChoisi && cafeDays.includes(todayKey())) activeCafeDay = todayKey();
-  if (!allTabs.includes(activeCafeDay)) activeCafeDay = allTabs.length ? allTabs[0] : '__carte__';
+  if (!cafeDays.includes(activeCafeDay)) activeCafeDay = cafeDays.length ? cafeDays[0] : null;
 
-  // Jours en pastilles ; « Voir la carte » : bouton à côté du titre (toujours visible, même sur petit écran)
+  // Jours en pastilles ; la carte s'ouvre en fenêtre depuis le bouton à côté du titre
   document.getElementById('cafeDayStrip').innerHTML = cafeDays.map(k =>
     '<button class="day-pill' + (k === activeCafeDay ? ' active' : '') + '" onclick="selectCafeDay(\'' + k + '\')">' + t(DAY_LABELS[k] || {fr:k,en:k}) + '</button>'
   ).join('');
   const carteBtn = document.getElementById('cafeCarteBtn');
   if (carteBtn) {
-    carteBtn.style.display = cafeCarteVisible ? '' : 'none';
-    const surCarte = activeCafeDay === '__carte__';
-    carteBtn.classList.toggle('active', surCarte);
-    carteBtn.innerHTML = surCarte && cafeDays.length
-      ? '🕐 ' + (lang === 'fr' ? 'Horaires' : 'Hours')
-      : '🍽 ' + t(I18N.voir_carte);
+    carteBtn.style.display = cafeCarteVisible && items.length ? '' : 'none';
+    carteBtn.innerHTML = '🍽 ' + t(I18N.voir_carte);
+  }
+  // Carte ouverte et données rafraîchies : on met la fenêtre à jour
+  if (document.getElementById('carteOverlay').classList.contains('show')) {
+    if (cafeCarteVisible && items.length) remplirCarte(items); else closeCarte();
   }
 
   const body = document.getElementById('cafeBody');
 
-  if (activeCafeDay === '__carte__') {
-    // Show menu (carte)
-    const cats = {};
-    items.forEach(it => {
-      const cat = lang === 'en' ? (it.categorie_en || it.categorie_fr) : it.categorie_fr;
-      if (!cats[cat]) cats[cat] = [];
-      cats[cat].push(it);
-    });
-    const menuHtml = Object.entries(cats).map(([cat, its]) =>
-      '<div class="menu-cat"><div class="menu-cat-label">' + esc(cat) + '</div>' +
-      its.map(it => '<div class="menu-row"><span class="menu-name">' + esc(lang === 'en' ? (it.nom_en||it.nom_fr) : it.nom_fr) + dietBadgesHtml(it) + '</span><span class="menu-price">' + esc(it.prix||'') + '</span></div>').join('') +
-      '</div>'
-    ).join('');
-    body.innerHTML = '<div class="card"><div class="card-header"><div class="card-icon cafe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg></div><div><div class="card-title">World Peace Café</div></div></div>' +
-      menuHtml +
-      '<div class="menu-note">' + t(I18N.cafe_note) + '</div></div>';
-  } else {
+  {
     // Show hours for selected day
     const list = cafeDayMap[activeCafeDay];
     if (list && list.length) {
@@ -1715,7 +1719,9 @@ function renderCafe() {
         hoursStatusHtml(list, activeCafeDay) + hoursRowsHtml(list, activeCafeDay) +
         '<div class="menu-note">' + t(I18N.cafe_note) + '</div></div>';
     } else {
-      body.innerHTML = '<div class="card"><p style="color:var(--text-muted);text-align:center;padding:20px">' + (lang === 'fr' ? 'Horaires non disponibles pour ce jour' : 'Hours not available for this day') + '</p></div>';
+      body.innerHTML = '<div class="card"><p style="color:var(--text-muted);text-align:center;padding:20px">' + (cafeDays.length
+        ? (lang === 'fr' ? 'Horaires non disponibles pour ce jour' : 'Hours not available for this day')
+        : (lang === 'fr' ? 'Horaires à venir prochainement' : 'Hours coming soon')) + '</p></div>';
     }
   }
 }
@@ -2558,7 +2564,7 @@ function renderAll() {
   setInterval(() => {
     renderSchedule();
     renderNowNext();
-    if (activeCafeDay !== '__carte__') renderCafe();
+    renderCafe();
     renderBoutique();
     renderAccueil();
     updateAlertBell();
