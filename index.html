@@ -2396,7 +2396,7 @@ function openGroupPicker(ensuite) {
   let ov = document.getElementById('groupOverlay');
   if (!ov) { ov = document.createElement('div'); ov.id = 'groupOverlay'; ov.className = 'alert-overlay'; document.body.appendChild(ov); }
   ov.innerHTML = '<div class="alert-box group-box">' +
-    '<div class="alert-header"><span class="alert-emoji">🎨</span><span class="alert-title">' + (fr ? 'Quelle est la couleur de votre badge ?' : 'What colour is your badge?') + '</span></div>' +
+    '<div class="alert-header"><span class="alert-title">' + (fr ? 'Quelle est la couleur de votre badge ?' : 'What colour is your badge?') + '</span></div>' +
     '<div class="alert-body"><p class="group-intro">' + (fr
       ? 'L\'application vous indiquera votre salle pour chaque séance. Vous pourrez changer à tout moment en touchant le bouton en haut à gauche.'
       : 'The app will show your room for each session. You can change it at any time with the button at the top left.') + '</p>' +
