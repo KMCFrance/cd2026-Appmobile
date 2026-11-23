@@ -744,8 +744,9 @@ a:hover { text-decoration: underline; }
   letter-spacing: 0.04em;
   padding: 2px 8px; border-radius: 8px;
 }
-.diet-badge.veg { background: var(--green-soft); color: var(--green); }
-.diet-badge.vgf { background: var(--gold-soft); color: var(--gold); }
+.diet-badge.vegan { background: var(--green-soft); color: var(--green); }
+.diet-badge.sg { background: var(--gold-soft); color: var(--gold); }
+.menu-name .diet-badge { display: inline-block; margin-left: 6px; font-size: 9px; padding: 1px 6px; vertical-align: 1px; white-space: nowrap; }
 
 /* ── Allergen button (inline with service title) ── */
 .meal-svc-header {
@@ -1127,6 +1128,8 @@ a:hover { text-decoration: underline; }
       <h2 data-i18n="s_info">Infos pratiques</h2>
       <p data-i18n="s_info_sub">Tout pour votre séjour</p>
     </div>
+    <div class="day-strip" id="infoDayStrip"></div>
+    <div class="section-body" id="infoHoursBody"></div>
     <div class="section-body" id="infosBody"></div>
   </div>
 
@@ -1157,6 +1160,9 @@ const I18N = {
   // s_prog_sub removed
   s_cafe:        { fr: 'World Peace Café', en: 'World Peace Café' },
   s_boutique:    { fr: 'Boutique du Dharma', en: 'Dharma Shop' },
+  s_accueil:     { fr: 'Accueil / Info', en: 'Welcome / Info desk' },
+  accueil_lieu:  { fr: 'Dans la galerie, avec l\'espace bénévolat', en: 'In the gallery, with the volunteer desk' },
+  accueil_note:  { fr: 'Pour toute question pendant la Célébration. En dehors des horaires d\'ouverture des inscriptions, c\'est l\'Accueil qui vous renseigne.', en: 'For any question during the Celebration. When the registration desk is closed, the Welcome desk can help you.' },
   s_repas:       { fr: 'Repas', en: 'Meals' },
   // s_repas_sub removed
   s_info:        { fr: 'Infos pratiques', en: 'Practical info' },
@@ -1181,54 +1187,46 @@ const I18N = {
 // ── Programme (fallback) ──
 // Colonnes Sheet : jour | heure | titre_fr | titre_en | type | desc_fr | desc_en | badge_fr | badge_en
 const FALLBACK_PROGRAMME = [
-  {jour:'ven-27', heure:'13h30',        titre_fr:'Ouverture des inscriptions',                    titre_en:'Registration opens',               type:'practical', desc_fr:'Bureau des inscriptions au rez-de-chaussée', desc_en:'Registration desk on the ground floor'},
-  {jour:'ven-27', heure:'18h – 19h',    titre_fr:'Dîner',                                         titre_en:'Dinner',                            type:'meal'},
-  {jour:'ven-27', heure:'20h – 21h30',  titre_fr:'Introduction',                                  titre_en:'Introduction',                      type:'teaching', desc_fr:'Avec Guèn Kelsang Eupamé', desc_en:'With Gen Kelsang Eupame'},
-  {jour:'sam-28', heure:'09h – 09h50',  titre_fr:'Méditation',                                    titre_en:'Meditation',                        type:'meditation'},
-  {jour:'sam-28', heure:'11h – 13h',    titre_fr:'Transmission des bénédictions de Tara Verte',   titre_en:'Green Tara Blessing Empowerment',   type:'ceremony', desc_fr:'Un moment sacré de connexion avec Tara Verte', desc_en:'A sacred moment of connection with Green Tara', badge_fr:'Transmission', badge_en:'Empowerment'},
-  {jour:'sam-28', heure:'13h15 – 14h15',titre_fr:'Déjeuner',                                      titre_en:'Lunch',                             type:'meal'},
-  {jour:'sam-28', heure:'16h30 – 18h',  titre_fr:'Enseignement',                                  titre_en:'Teaching',                          type:'teaching', desc_fr:'Avec Guèn Kelsang Eupamé', desc_en:'With Gen Kelsang Eupame'},
-  {jour:'sam-28', heure:'18h15 – 19h15',titre_fr:'Dîner',                                         titre_en:'Dinner',                            type:'meal'},
-  {jour:'sam-28', heure:'20h15 – 21h15',titre_fr:'Joyau qui exauce les souhaits',                  titre_en:'Wishfulfilling Jewel',              type:'ceremony', desc_fr:'Prières avec offrandes de nourriture', desc_en:'Prayers with food offerings'},
-  {jour:'dim-29', heure:'09h – 10h',    titre_fr:'Méditation',                                    titre_en:'Meditation',                        type:'meditation'},
-  {jour:'dim-29', heure:'11h – 12h30',  titre_fr:'Enseignement',                                  titre_en:'Teaching',                          type:'teaching', desc_fr:'Avec Guèn Kelsang Eupamé', desc_en:'With Gen Kelsang Eupame'},
-  {jour:'dim-29', heure:'12h45 – 13h45',titre_fr:'Déjeuner',                                      titre_en:'Lunch',                             type:'meal'},
-  {jour:'dim-29', heure:'16h30 – 18h',  titre_fr:'Enseignement',                                  titre_en:'Teaching',                          type:'teaching', desc_fr:'Avec Guèn Kelsang Eupamé', desc_en:'With Gen Kelsang Eupame'},
-  {jour:'dim-29', heure:'18h15 – 19h15',titre_fr:'Dîner',                                         titre_en:'Dinner',                            type:'meal'},
-  {jour:'dim-29', heure:'20h15 – 21h15',titre_fr:'Joyau qui exauce les souhaits',                  titre_en:'Wishfulfilling Jewel',              type:'ceremony', desc_fr:'Prières avec offrandes de nourriture', desc_en:'Prayers with food offerings'},
-  {jour:'lun-30', heure:'09h – 10h',    titre_fr:'Méditation',                                    titre_en:'Meditation',                        type:'meditation'},
-  {jour:'lun-30', heure:'11h – 12h30',  titre_fr:'Enseignement',                                  titre_en:'Teaching',                          type:'teaching', desc_fr:'Avec Guèn Kelsang Eupamé', desc_en:'With Gen Kelsang Eupame'},
-  {jour:'lun-30', heure:'12h45 – 13h45',titre_fr:'Déjeuner',                                      titre_en:'Lunch',                             type:'meal'},
-  {jour:'lun-30', heure:'14h – 17h',    titre_fr:'Entraide — Démontage',                           titre_en:'Helping out — Takedown',            type:'practical', desc_fr:'Tous ensemble pour remettre le château en ordre', desc_en:'Everyone together to tidy up the château'},
+  {"jour": "ven-27", "heure": "14h30 – 19h30", "titre_fr": "Inscriptions", "titre_en": "Registration", "type": "practical", "desc_fr": "Bureau des inscriptions dans la grande salle à manger. Accueil/Info, espace bénévolat, boutique, Tharpa et World Peace Café sont ouverts.", "desc_en": "Registration desk in the large dining room. Welcome/Info desk, volunteer desk, shop, Tharpa and World Peace Café are open."},
+  {"jour": "ven-27", "heure": "18h – 19h", "titre_fr": "Dîner", "titre_en": "Dinner", "type": "meal"},
+  {"jour": "ven-27", "heure": "20h – 21h30", "titre_fr": "Introduction", "titre_en": "Introduction", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame", "sadhana_fr": "Prières pour la méditation", "sadhana_en": "Prayers for Meditation"},
+  {"jour": "ven-27", "heure": "21h30 – 22h15", "titre_fr": "Inscriptions (2e ouverture)", "titre_en": "Registration (second opening)", "type": "practical", "desc_fr": "Inscriptions, bénévolat, Accueil/Info, boutique, Tharpa et World Peace Café rouvrent après l'introduction.", "desc_en": "Registration, volunteer desk, Welcome/Info desk, shop, Tharpa and World Peace Café reopen after the introduction."},
+  {"jour": "sam-28", "heure": "06h30 – 08h00", "titre_fr": "Petit-déjeuner", "titre_en": "Breakfast", "type": "meal"},
+  {"jour": "sam-28", "heure": "09h – 10h", "titre_fr": "Méditation", "titre_en": "Meditation", "type": "meditation", "desc_fr": "Avec Guèn Kelsang Sangyé", "desc_en": "With Gen Kelsang Sangye"},
+  {"jour": "sam-28", "heure": "11h – 13h", "titre_fr": "Transmission des bénédictions de Tara Verte", "titre_en": "Green Tara Blessing Empowerment", "type": "ceremony", "badge_fr": "Transmission", "badge_en": "Empowerment", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame"},
+  {"jour": "sam-28", "heure": "13h15 – 14h15", "titre_fr": "Déjeuner", "titre_en": "Lunch", "type": "meal"},
+  {"jour": "sam-28", "heure": "16h30 – 18h", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame"},
+  {"jour": "sam-28", "heure": "18h15 – 19h15", "titre_fr": "Dîner", "titre_en": "Dinner", "type": "meal"},
+  {"jour": "sam-28", "heure": "20h15 – 21h15", "titre_fr": "Le Joyau qui exauce les souhaits avec tsog", "titre_en": "Wishfulfilling Jewel with tsog", "type": "ceremony", "desc_fr": "Prières avec offrandes de nourriture (tsog)", "desc_en": "Prayers with food offerings (tsog)"},
+  {"jour": "dim-29", "heure": "06h30 – 08h00", "titre_fr": "Petit-déjeuner", "titre_en": "Breakfast", "type": "meal"},
+  {"jour": "dim-29", "heure": "09h – 10h", "titre_fr": "Méditation", "titre_en": "Meditation", "type": "meditation", "desc_fr": "Avec Guèn Kelsang Sangyé", "desc_en": "With Gen Kelsang Sangye"},
+  {"jour": "dim-29", "heure": "11h – 12h30", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame"},
+  {"jour": "dim-29", "heure": "12h45 – 13h45", "titre_fr": "Déjeuner", "titre_en": "Lunch", "type": "meal"},
+  {"jour": "dim-29", "heure": "15h – 15h30", "titre_fr": "Enseignement pour les enfants", "titre_en": "Children's teaching", "type": "teaching"},
+  {"jour": "dim-29", "heure": "16h30 – 18h", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame"},
+  {"jour": "dim-29", "heure": "18h15 – 19h15", "titre_fr": "Dîner", "titre_en": "Dinner", "type": "meal"},
+  {"jour": "dim-29", "heure": "20h15 – 21h15", "titre_fr": "Le Joyau qui exauce les souhaits avec tsog", "titre_en": "Wishfulfilling Jewel with tsog", "type": "ceremony", "desc_fr": "Prières avec offrandes de nourriture (tsog)", "desc_en": "Prayers with food offerings (tsog)"},
+  {"jour": "lun-30", "heure": "06h30 – 08h00", "titre_fr": "Petit-déjeuner", "titre_en": "Breakfast", "type": "meal"},
+  {"jour": "lun-30", "heure": "09h – 10h", "titre_fr": "Méditation", "titre_en": "Meditation", "type": "meditation", "desc_fr": "Avec Guèn Kelsang Sangyé", "desc_en": "With Gen Kelsang Sangye"},
+  {"jour": "lun-30", "heure": "11h – 12h30", "titre_fr": "Enseignement", "titre_en": "Teaching", "type": "teaching", "desc_fr": "Avec Guèn Kelsang Eupamé", "desc_en": "With Gen Kelsang Eupame"},
+  {"jour": "lun-30", "heure": "12h45 – 13h45", "titre_fr": "Déjeuner", "titre_en": "Lunch", "type": "meal"},
+  {"jour": "lun-30", "heure": "14h – 17h", "titre_fr": "Entraide — Rangement et démontage", "titre_en": "Helping out — Tidying up and takedown", "type": "practical", "desc_fr": "Tous ensemble pour remettre le château en ordre", "desc_en": "Everyone together to tidy up the château"},
 ];
 
 // ── Infos pratiques (fallback) ──
 // Colonnes Sheet : id | titre_fr | titre_en | contenu_fr | contenu_en
 const FALLBACK_INFOS = [
-  {id:'lieu', titre_fr:'Lieu & accès', titre_en:'Venue & access',
-    contenu_fr:'<strong>Centre de Méditation Kadampa France</strong><br>Château de Segrais, 72220 Saint-Mars-d\'Outillé<br><br><a href="https://maps.google.com/?q=Chateau+de+Segrais+Saint-Mars-d%27Outille" target="_blank" rel="noopener">Ouvrir dans Google Maps ↗</a>',
-    contenu_en:'<strong>Kadampa Meditation Centre France</strong><br>Château de Segrais, 72220 Saint-Mars-d\'Outillé<br><br><a href="https://maps.google.com/?q=Chateau+de+Segrais+Saint-Mars-d%27Outille" target="_blank" rel="noopener">Open in Google Maps ↗</a>'},
-  {id:'navettes', titre_fr:'Navettes', titre_en:'Shuttles',
-    contenu_fr:'<strong>Depuis la gare d\'Ecommoy — 5 € par trajet</strong><br><br>Vendredi 27 (arrivées) : 12h30 – 19h15<br>Lundi 30 (départs) : 8h45 – 19h15<br><br>Pas de navette samedi ni dimanche.<br>Réservation au plus tard le <strong>24 novembre</strong>.<br><br>Tél. : <a href="tel:+33243877102">02 43 87 71 02</a>',
-    contenu_en:'<strong>From Ecommoy station — €5 per trip</strong><br><br>Friday 27 (arrivals): 12:30pm – 7:15pm<br>Monday 30 (departures): 8:45am – 7:15pm<br><br>No shuttle on Saturday or Sunday.<br>Book by <strong>24 November</strong>.<br><br>Phone: <a href="tel:+33243877102">02 43 87 71 02</a>'},
-  {id:'transport', titre_fr:'Autres transports', titre_en:'Other transport',
-    contenu_fr:'<strong>Bus</strong> : Ligne 217 depuis Le Mans → Saint-Mars-d\'Outillé, ~2,50 €, ~1h. Puis 15 min à pied.<br><br><strong>Train</strong> : TER Le Mans → gare d\'Ecommoy.<br><br><strong>Taxi</strong> : Fouqueray — <a href="tel:+33243427368">02 43 42 73 68</a> (fermé dim.). ~20 € CMK ↔ Ecommoy.<br><br><strong>Covoiturage</strong> : Tableau sur place. <a href="https://comparabus.com" target="_blank" rel="noopener">comparabus.com</a>',
-    contenu_en:'<strong>Bus</strong>: Line 217 from Le Mans → Saint-Mars-d\'Outillé, ~€2.50, ~1h. Then 15 min walk.<br><br><strong>Train</strong>: TER Le Mans → Ecommoy station.<br><br><strong>Taxi</strong>: Fouqueray — <a href="tel:+33243427368">02 43 42 73 68</a> (closed Sun). ~€20 CMK ↔ Ecommoy.<br><br><strong>Carpooling</strong>: Board on site. <a href="https://comparabus.com" target="_blank" rel="noopener">comparabus.com</a>'},
-  {id:'traduction', titre_fr:'Traduction', titre_en:'Translation',
-    contenu_fr:'Traduction simultanée <strong>français → anglais</strong> pour tous les enseignements et méditations. Casques fournis à l\'accueil.',
-    contenu_en:'Simultaneous <strong>French → English</strong> translation for all teachings and meditations. Headsets provided at reception.'},
-  {id:'familles', titre_fr:'Familles & enfants', titre_en:'Families & children',
-    contenu_fr:'Une <strong>salle de retransmission vidéo</strong> est disponible pour les familles avec enfants.',
-    contenu_en:'A <strong>video relay room</strong> is available for families with children.'},
-  {id:'streaming', titre_fr:'Streaming', titre_en:'Streaming',
-    contenu_fr:'<strong>Transmission de Tara Verte</strong> : en direct uniquement (sam. 28, 11h–13h).<br><br><strong>Enseignements et prières</strong> : en direct + différé jusqu\'au mardi 8 décembre 12h30.',
-    contenu_en:'<strong>Green Tara Empowerment</strong>: live only (Sat 28, 11am–1pm).<br><br><strong>Teachings & prayers</strong>: live + on demand until Tuesday 8 December 12:30pm.'},
-  {id:'repas-info', titre_fr:'Repas & régimes', titre_en:'Meals & dietary',
-    contenu_fr:'Tous les repas sont <strong>100 % végétariens</strong>. Alternative <strong>végan sans gluten</strong> sur demande à l\'inscription. Petit-déjeuner inclus.',
-    contenu_en:'All meals are <strong>100% vegetarian</strong>. <strong>Vegan gluten-free</strong> alternative on request at registration. Breakfast included.'},
-  {id:'contacts', titre_fr:'Contacts', titre_en:'Contacts',
-    contenu_fr:'<strong>Inscriptions</strong><br><a href="mailto:inscriptions-festival@kadampafrance.org">inscriptions-festival@kadampafrance.org</a><br><br><strong>Bénévolat</strong><br><a href="mailto:benevolat-festival@kadampafrance.org">benevolat-festival@kadampafrance.org</a><br><br><strong>Navettes</strong><br><a href="tel:+33243877102">02 43 87 71 02</a>',
-    contenu_en:'<strong>Registration</strong><br><a href="mailto:inscriptions-festival@kadampafrance.org">inscriptions-festival@kadampafrance.org</a><br><br><strong>Volunteering</strong><br><a href="mailto:benevolat-festival@kadampafrance.org">benevolat-festival@kadampafrance.org</a><br><br><strong>Shuttles</strong><br><a href="tel:+33243877102">02 43 87 71 02</a>'},
+  {"id": "urgence", "titre_fr": "Urgence & sécurité", "titre_en": "Emergency & safety", "contenu_fr": "<strong>Urgence de jour comme de nuit</strong> : téléphone d'astreinte <a href=\"tel:+33767194849\">07 67 19 48 49</a>, ou le <strong>téléphone d'urgence rouge</strong> dans le sas à l'entrée du château.<br><br><strong>Alarme incendie</strong> : quittez immédiatement votre bâtiment et rejoignez le <strong>point de rassemblement devant le château</strong>. Suivez les consignes de l'équipe de sécurité incendie et de l'équipe de la Célébration.", "contenu_en": "<strong>Emergency, day or night</strong>: on-call phone <a href=\"tel:+33767194849\">07 67 19 48 49</a>, or the <strong>red emergency phone</strong> in the entrance lobby of the château.<br><br><strong>Fire alarm</strong>: leave your building immediately and go to the <strong>assembly point in front of the château</strong>. Follow the instructions of the fire safety team and the Celebration team."},
+  {"id": "lieu", "titre_fr": "Lieu & accès", "titre_en": "Venue & access", "contenu_fr": "<strong>Centre de Méditation Kadampa France</strong><br>Château de Segrais, 72220 Saint-Mars-d'Outillé<br><br><strong>Code du portail : 1004B</strong><br><br><a href=\"https://maps.google.com/?q=Chateau+de+Segrais+Saint-Mars-d%27Outille\" target=\"_blank\" rel=\"noopener\">Ouvrir dans Google Maps ↗</a>", "contenu_en": "<strong>Kadampa Meditation Centre France</strong><br>Château de Segrais, 72220 Saint-Mars-d'Outillé<br><br><strong>Gate code: 1004B</strong><br><br><a href=\"https://maps.google.com/?q=Chateau+de+Segrais+Saint-Mars-d%27Outille\" target=\"_blank\" rel=\"noopener\">Open in Google Maps ↗</a>"},
+  {"id": "plan", "titre_fr": "Où trouver quoi ?", "titre_en": "Where to find what?", "contenu_fr": "<strong>Salles de méditation</strong> : salle principale (rez-de-chaussée du château), chapiteau de retransmission, salle de retransmission familles (à droite en sortant de la galerie).<br><br><strong>Bureau des inscriptions</strong> : grande salle à manger. Quand il est fermé, l'Accueil/Info vous renseigne.<br><strong>Accueil/Info et espace bénévolat</strong> : dans la galerie.<br><strong>Repas</strong> : chapiteau dédié (service unique).<br><strong>World Peace Café</strong> : les 2 salles à manger du château.<br><strong>Boutique et mérite shop</strong> : tente devant le lodge 1.<br><strong>Librairie Tharpa et boutique</strong> : lodge 1.<br><br>Les horaires d'ouverture sont dans les onglets Café et Boutique, et dans la carte Accueil / Info ci-dessus.", "contenu_en": "<strong>Meditation rooms</strong>: main room (ground floor of the château), relay marquee, family relay room (on the right as you leave the gallery).<br><br><strong>Registration desk</strong>: large dining room. When it is closed, the Welcome/Info desk can help you.<br><strong>Welcome/Info desk and volunteer desk</strong>: in the gallery.<br><strong>Meals</strong>: dedicated marquee (single sitting).<br><strong>World Peace Café</strong>: the 2 dining rooms of the château.<br><strong>Shop and merit shop</strong>: tent in front of lodge 1.<br><strong>Tharpa bookshop and shop</strong>: lodge 1.<br><br>Opening hours are in the Café and Shop tabs, and in the Welcome / Info card above."},
+  {"id": "vie-sur-place", "titre_fr": "Vie sur place", "titre_en": "Life on site", "contenu_fr": "• <strong>Silence</strong> dans les parties communes et les hébergements à partir de <strong>22h30</strong>.<br>• Il est <strong>interdit de fumer ou de vapoter</strong> dans toute la propriété (y compris devant le portail rouge et sur le parking), sauf à l'emplacement réservé à côté du parking, sur la gauche en sortant.<br>• Pas de nourriture dans les chambres (rongeurs).<br>• Le CMK est un centre bouddhiste : <strong>alcool et drogues interdits</strong> dans toute l'enceinte, parking compris. Pas de nourriture non végétarienne (viande, poisson).<br>• Pas de radio ni de musique sans écouteurs, pas d'instrument de musique.<br>• Pas de bougie ni de bâton d'encens à l'intérieur des bâtiments.<br><br><strong>Avant votre départ</strong> : vous pouvez faire le ménage de votre chambre. Merci de déposer le linge de lit utilisé dans les paniers à linge à droite du portail rouge, à l'entrée du château.", "contenu_en": "• <strong>Silence</strong> in common areas and accommodation from <strong>10:30pm</strong>.<br>• <strong>Smoking and vaping are not allowed</strong> anywhere on the property (including in front of the red gate and in the car park), except at the designated spot next to the car park, on the left as you leave.<br>• No food in the rooms (rodents).<br>• The KMC is a Buddhist centre: <strong>no alcohol or drugs</strong> anywhere on the grounds, car park included. No non-vegetarian food (meat, fish).<br>• No radio or music without headphones, no musical instruments.<br>• No candles or incense sticks inside the buildings.<br><br><strong>Before you leave</strong>: you may clean your room. Please put your used bed linen in the laundry baskets to the right of the red gate, at the entrance of the château."},
+  {"id": "navettes", "titre_fr": "Navettes", "titre_en": "Shuttles", "contenu_fr": "<strong>Depuis la gare d'Ecommoy — 5 € par trajet</strong><br><br>Vendredi 27 (arrivées) : 12h30 – 19h15<br>Lundi 30 (départs) : 13h – 18h30<br><br>Pas de navette samedi ni dimanche.<br>Réservation au plus tard le <strong>24 novembre</strong>.<br><br>Tél. : <a href=\"tel:+33243877102\">02 43 87 71 02</a>", "contenu_en": "<strong>From Ecommoy station — €5 per trip</strong><br><br>Friday 27 (arrivals): 12:30pm – 7:15pm<br>Monday 30 (departures): 1pm – 6:30pm<br><br>No shuttle on Saturday or Sunday.<br>Book by <strong>24 November</strong>.<br><br>Phone: <a href=\"tel:+33243877102\">02 43 87 71 02</a>"},
+  {"id": "transport", "titre_fr": "Autres transports", "titre_en": "Other transport", "contenu_fr": "<strong>Bus</strong> : Ligne 217 depuis Le Mans → Saint-Mars-d'Outillé, ~2,50 €, ~1h. Puis 15 min à pied.<br><br><strong>Train</strong> : TER Le Mans → gare d'Ecommoy.<br><br><strong>Taxi</strong> : Fouqueray — <a href=\"tel:+33243427368\">02 43 42 73 68</a> (fermé dim.). ~20 € CMK ↔ Ecommoy.<br><br><strong>Covoiturage</strong> : Tableau sur place.", "contenu_en": "<strong>Bus</strong>: Line 217 from Le Mans → Saint-Mars-d'Outillé, ~€2.50, ~1h. Then 15 min walk.<br><br><strong>Train</strong>: TER Le Mans → Ecommoy station.<br><br><strong>Taxi</strong>: Fouqueray — <a href=\"tel:+33243427368\">02 43 42 73 68</a> (closed Sun). ~€20 CMK ↔ Ecommoy.<br><br><strong>Carpooling</strong>: Board on site."},
+  {"id": "traduction", "titre_fr": "Traduction", "titre_en": "Translation", "contenu_fr": "Traduction simultanée <strong>français → anglais</strong> pour tous les enseignements et méditations. Casques fournis à l'accueil.", "contenu_en": "Simultaneous <strong>French → English</strong> translation for all teachings and meditations. Headsets provided at reception."},
+  {"id": "familles", "titre_fr": "Familles & enfants", "titre_en": "Families & children", "contenu_fr": "La <strong>salle de retransmission familles</strong> se trouve à droite en sortant de la galerie. Pendant les séances, elle est réservée aux parents et aux enfants ; en dehors des séances, elle redevient le World Peace Café, ouvert à tous.<br><br><strong>Enseignement pour les enfants</strong> : dimanche 29, 15h – 15h30.", "contenu_en": "The <strong>family relay room</strong> is on the right as you leave the gallery. During sessions it is reserved for parents and children; outside sessions it becomes the World Peace Café again, open to everyone.<br><br><strong>Children's teaching</strong>: Sunday 29, 3pm – 3:30pm."},
+  {"id": "streaming", "titre_fr": "Streaming", "titre_en": "Streaming", "contenu_fr": "<strong>Transmission de Tara Verte</strong> : en direct uniquement (sam. 28, 11h–13h).<br><br><strong>Enseignements et prières</strong> : en direct + différé jusqu'au mardi 8 décembre 12h30.", "contenu_en": "<strong>Green Tara Empowerment</strong>: live only (Sat 28, 11am–1pm).<br><br><strong>Teachings & prayers</strong>: live + on demand until Tuesday 8 December 12:30pm."},
+  {"id": "repas-info", "titre_fr": "Repas & régimes", "titre_en": "Meals & dietary", "contenu_fr": "Tous les repas sont <strong>100 % végétariens</strong>, servis dans le <strong>chapiteau dédié</strong> (service unique). Alternative <strong>végan sans gluten</strong> sur demande à l'inscription.<br><br><strong>Petit-déjeuner</strong> : 6h30 – 8h00 (samedi, dimanche et lundi).", "contenu_en": "All meals are <strong>100% vegetarian</strong>, served in the <strong>dedicated marquee</strong> (single sitting). <strong>Vegan gluten-free</strong> alternative on request at registration.<br><br><strong>Breakfast</strong>: 6:30am – 8:00am (Saturday, Sunday and Monday)."},
+  {"id": "contacts", "titre_fr": "Contacts", "titre_en": "Contacts", "contenu_fr": "<strong>Urgence (jour et nuit)</strong><br><a href=\"tel:+33767194849\">07 67 19 48 49</a><br><br><strong>Inscriptions</strong><br><a href=\"mailto:inscriptions-festival@kadampafrance.org\">inscriptions-festival@kadampafrance.org</a><br><br><strong>Bénévolat</strong><br><a href=\"mailto:benevolat-festival@kadampafrance.org\">benevolat-festival@kadampafrance.org</a><br><br><strong>Navettes</strong><br><a href=\"tel:+33243877102\">02 43 87 71 02</a>", "contenu_en": "<strong>Emergency (day and night)</strong><br><a href=\"tel:+33767194849\">07 67 19 48 49</a><br><br><strong>Registration</strong><br><a href=\"mailto:inscriptions-festival@kadampafrance.org\">inscriptions-festival@kadampafrance.org</a><br><br><strong>Volunteering</strong><br><a href=\"mailto:benevolat-festival@kadampafrance.org\">benevolat-festival@kadampafrance.org</a><br><br><strong>Shuttles</strong><br><a href=\"tel:+33243877102\">02 43 87 71 02</a>"},
 ];
 
 const FALLBACK_CAFE = [
@@ -1244,25 +1242,46 @@ const FALLBACK_CAFE = [
 ];
 
 const FALLBACK_HORAIRES = [
-  {lieu:'cafe', jour_fr:'Vendredi 27', jour_en:'Friday 27', ouverture:'16h', fermeture:'21h30'},
-  {lieu:'cafe', jour_fr:'Samedi 28', jour_en:'Saturday 28', ouverture:'10h', fermeture:'21h30'},
-  {lieu:'cafe', jour_fr:'Dimanche 29', jour_en:'Sunday 29', ouverture:'10h', fermeture:'21h30'},
-  {lieu:'cafe', jour_fr:'Lundi 30', jour_en:'Monday 30', ouverture:'10h', fermeture:'14h'},
+  {"lieu": "cafe", "jour_fr": "Vendredi 27", "jour_en": "Friday 27", "ouverture": "14h30", "fermeture": "19h30"},
+  {"lieu": "cafe", "jour_fr": "Vendredi 27", "jour_en": "Friday 27", "ouverture": "21h30", "fermeture": "22h15"},
+  {"lieu": "cafe", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "cafe", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "cafe", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "14h00", "fermeture": "16h10"},
+  {"lieu": "cafe", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "19h00", "fermeture": "19h45"},
+  {"lieu": "cafe", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "cafe", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "cafe", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "13h30", "fermeture": "16h10"},
+  {"lieu": "cafe", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "19h00", "fermeture": "19h45"},
+  {"lieu": "cafe", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "cafe", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "shop", "jour_fr": "Vendredi 27", "jour_en": "Friday 27", "ouverture": "14h30", "fermeture": "19h30"},
+  {"lieu": "shop", "jour_fr": "Vendredi 27", "jour_en": "Friday 27", "ouverture": "21h30", "fermeture": "22h15"},
+  {"lieu": "shop", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "shop", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "shop", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "14h00", "fermeture": "16h10"},
+  {"lieu": "shop", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "19h00", "fermeture": "19h45"},
+  {"lieu": "shop", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "shop", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "shop", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "13h30", "fermeture": "16h10"},
+  {"lieu": "shop", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "19h00", "fermeture": "19h45"},
+  {"lieu": "shop", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "shop", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "12h45", "fermeture": "14h00"},
+  {"lieu": "info", "jour_fr": "Vendredi 27", "jour_en": "Friday 27", "ouverture": "14h30", "fermeture": "19h30"},
+  {"lieu": "info", "jour_fr": "Vendredi 27", "jour_en": "Friday 27", "ouverture": "21h30", "fermeture": "22h15"},
+  {"lieu": "info", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "info", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "info", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "14h00", "fermeture": "16h10"},
+  {"lieu": "info", "jour_fr": "Samedi 28", "jour_en": "Saturday 28", "ouverture": "19h00", "fermeture": "19h45"},
+  {"lieu": "info", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "info", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "info", "jour_fr": "Dimanche 29", "jour_en": "Sunday 29", "ouverture": "19h00", "fermeture": "19h45"},
+  {"lieu": "info", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "08h00", "fermeture": "08h45"},
+  {"lieu": "info", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "10h00", "fermeture": "10h45"},
+  {"lieu": "info", "jour_fr": "Lundi 30", "jour_en": "Monday 30", "ouverture": "12h45", "fermeture": "14h00"},
 ];
 
-const FALLBACK_REPAS = [
-  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Soupe de légumes de saison', plat_en:'Seasonal vegetable soup', regime:'veg,vgf', allergenes:'celeri', allergenes_note_fr:'Peut contenir des traces de céleri-rave', allergenes_note_en:'May contain traces of celeriac'},
-  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Gratin de pâtes aux légumes', plat_en:'Pasta and vegetable gratin', regime:'veg', allergenes:'gluten,lait,oeufs'},
-  {jour:'ven-27', service_fr:'Dîner', service_en:'Dinner', heure:'18h – 19h', plat_fr:'Salade composée', plat_en:'Mixed salad', regime:'veg,vgf', allergenes:'moutarde,sesame'},
-  {jour:'sam-28', service_fr:'Déjeuner', service_en:'Lunch', heure:'13h15 – 14h15', plat_fr:'Curry de légumes au lait de coco', plat_en:'Coconut vegetable curry', regime:'veg,vgf', allergenes:''},
-  {jour:'sam-28', service_fr:'Déjeuner', service_en:'Lunch', heure:'13h15 – 14h15', plat_fr:'Riz basmati', plat_en:'Basmati rice', regime:'veg,vgf', allergenes:''},
-  {jour:'sam-28', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Quiche aux poireaux', plat_en:'Leek quiche', regime:'veg', allergenes:'gluten,lait,oeufs'},
-  {jour:'sam-28', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Salade verte', plat_en:'Green salad', regime:'veg,vgf', allergenes:'moutarde'},
-  {jour:'dim-29', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Lasagnes végétariennes', plat_en:'Vegetarian lasagne', regime:'veg', allergenes:'gluten,lait,oeufs,celeri'},
-  {jour:'dim-29', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Salade de quinoa', plat_en:'Quinoa salad', regime:'veg,vgf', allergenes:'fruits_coque,sesame'},
-  {jour:'dim-29', service_fr:'Dîner', service_en:'Dinner', heure:'18h15 – 19h15', plat_fr:'Dhal de lentilles corail', plat_en:'Red lentil dhal', regime:'veg,vgf', allergenes:''},
-  {jour:'lun-30', service_fr:'Déjeuner', service_en:'Lunch', heure:'12h45 – 13h45', plat_fr:'Repas convivial de fin de Célébration', plat_en:'Farewell community meal', regime:'veg', allergenes:'gluten,lait'},
-];
+// Pas de repas de démonstration : sans Firebase ni cache, l'onglet Repas reste vide (jamais d'allergènes inventés)
+const FALLBACK_REPAS = [];
 
 const BOUTIQUE_ITEMS = [
   {fr:'Livres de Dharma (FR & EN)', en:'Dharma books (FR & EN)'},
@@ -1293,16 +1312,84 @@ let sheetData = { cafe: null, repas: null, horaires: null, programme: null, info
 
 const t = (o) => o ? (o[lang] || o.fr || '') : '';
 
+// Échappe un texte saisi dans l'admin avant de l'insérer dans le HTML
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+/* ── Régimes : badges indépendants « Végan » et « Sans gluten » ──
+   Champs actuels (admin) : vegan / sans_gluten (booléens). Chaque champ présent l'emporte.
+   Ancien champ texte « regime », utilisé seulement pour un champ absent :
+     'vgf' = végan sans gluten → Végan + Sans gluten ; 'veg' = végétarien → aucun badge. */
+const DIET_LABELS = {
+  vegan: { fr: 'Végan', en: 'Vegan' },
+  sg:    { fr: 'Sans gluten', en: 'Gluten-free' },
+};
+function estVrai(v) { return v === true || v === 'true' || v === 1 || v === '1' || v === 'oui'; }
+function dietFlags(d) {
+  const codes = String((d && d.regime) || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean);
+  const aVegan = d && d.vegan !== undefined && d.vegan !== null;
+  const aSG = d && d.sans_gluten !== undefined && d.sans_gluten !== null;
+  return {
+    vegan: aVegan ? estVrai(d.vegan) : codes.some(c => c === 'vgf' || c === 'vegan'),
+    sg:    aSG ? estVrai(d.sans_gluten) : codes.some(c => c === 'vgf' || c === 'sg' || c === 'gf' || c === 'sans_gluten'),
+  };
+}
+function dietBadgesHtml(d) {
+  const f = dietFlags(d);
+  return (f.vegan ? '<span class="diet-badge vegan">' + t(DIET_LABELS.vegan) + '</span>' : '') +
+         (f.sg ? '<span class="diet-badge sg">' + t(DIET_LABELS.sg) + '</span>' : '');
+}
+
 /* ══════════════════════════════════════════════════════
    FIREBASE DATA FETCHING (REST API)
    ══════════════════════════════════════════════════════ */
 
+// Réglages lus dans Firebase : uniquement ces clés de /config (jamais /config.json en entier,
+// qui contient l'empreinte du mot de passe admin).
+const CONFIG_KEYS = ['cafeVisible', 'disabledServices'];
+
+function applyConfig(cfg) {
+  if (!cfg) return;
+  if ('cafeVisible' in cfg) cafeCarteVisible = cfg.cafeVisible !== false;
+  if ('disabledServices' in cfg) {
+    const ds = {};
+    const src = cfg.disabledServices;
+    if (src && typeof src === 'object') {
+      Object.keys(src).forEach(k => {
+        const v = src[k];
+        const arr = Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+        ds[k] = arr.filter(x => typeof x === 'string');
+      });
+    }
+    disabledServices = ds;
+  }
+}
+
+// Lit chaque clé séparément. Clé absente (null) → valeur par défaut ; échec réseau → valeur actuelle gardée.
+async function loadConfigFlags() {
+  const cfg = {};
+  let ok = 0;
+  await Promise.all(CONFIG_KEYS.map(async k => {
+    try {
+      const r = await fetch(CONFIG.FIREBASE_URL + '/config/' + k + '.json');
+      if (!r.ok) return;
+      cfg[k] = await r.json();
+      ok++;
+    } catch (e) { /* garder la valeur actuelle */ }
+  }));
+  if (!ok) return;
+  const merged = Object.assign(loadConfigCache() || {}, cfg);
+  applyConfig(merged);
+  saveConfigCache(merged);
+}
+
 async function loadSheetData() {
   if (!CONFIG.FIREBASE_URL) return false;
   try {
+    const cfgPromise = loadConfigFlags();
     const r = await fetch(CONFIG.FIREBASE_URL + '/data.json');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
+    await cfgPromise;
     if (!data) return false;
     if (data.cafe && data.cafe.length) sheetData.cafe = data.cafe;
     if (data.repas && data.repas.length) sheetData.repas = data.repas;
@@ -1314,17 +1401,6 @@ async function loadSheetData() {
     sheetData.lastFetch = new Date();
     // Cache for offline use
     saveDataCache(data);
-    // Load config flags
-    try {
-      const cfgResp = await fetch(CONFIG.FIREBASE_URL + '/config.json');
-      if (cfgResp.ok) {
-        const cfg = await cfgResp.json();
-        if (cfg) {
-          if (cfg.cafeVisible !== undefined) cafeCarteVisible = cfg.cafeVisible !== false;
-          if (cfg.disabledServices && typeof cfg.disabledServices === 'object') disabledServices = cfg.disabledServices;
-        }
-      }
-    } catch(e) { /* keep defaults */ }
     return true;
   } catch (e) {
     console.warn('[CD2026] Erreur Firebase:', e);
@@ -1339,6 +1415,7 @@ async function loadSheetData() {
         if (cached.programme && cached.programme.length) sheetData.programme = cached.programme;
         if (cached.infos && cached.infos.length) sheetData.infos = cached.infos;
         if (cached.alertes) sheetData.alertes = cached.alertes;
+        applyConfig(loadConfigCache());
         sheetData.lastFetch = new Date();
         return true;
       }
@@ -1416,27 +1493,47 @@ function renderSchedule() {
   }).join('');
 }
 
+// ── Horaires par pôle (café, boutique, accueil/info) : plusieurs créneaux par jour ──
+const HOURS_DAY_ORDER = ['ven-27','sam-28','dim-29','lun-30'];
+// Retrouve la clé de jour ('sam-28') à partir du libellé saisi dans l'admin (« Samedi 28 », « Sam. 28 »…)
+function hoursDayKey(jourFr) {
+  const j = String(jourFr || '').toLowerCase();
+  for (const dk of HOURS_DAY_ORDER) {
+    const [mot, num] = dk.split('-');
+    const lbl = DAY_LABELS[dk];
+    if ((lbl && j.includes(lbl.fr.toLowerCase().replace('.', ''))) || (j.includes(mot) && (!/\d/.test(j) || j.includes(num)))) return dk;
+  }
+  return null;
+}
+// { days: ['ven-27', …], map: { 'ven-27': [lignes triées par heure] } }
+function hoursByDay(lieu) {
+  const all = sheetData.horaires || FALLBACK_HORAIRES;
+  const rows = all.filter(r => r && (lieu === 'cafe' ? (r.lieu === 'cafe' || !r.lieu) : r.lieu === lieu));
+  const map = {};
+  rows.forEach(h => {
+    const dk = hoursDayKey(h.jour_fr);
+    if (!dk) return;
+    (map[dk] = map[dk] || []).push(h);
+  });
+  const minutes = x => { const m = String(x || '').match(/(\d{1,2})\s*h\s*(\d{0,2})/i); return m ? (+m[1]) * 60 + (+(m[2] || 0)) : 9999; };
+  Object.values(map).forEach(list => list.sort((a, b) => minutes(a.ouverture) - minutes(b.ouverture)));
+  return { days: HOURS_DAY_ORDER.filter(d => map[d]), map };
+}
+// Lignes « jour | créneau » : le jour n'est écrit qu'en face du premier créneau
+function hoursRowsHtml(list) {
+  return list.map((h, i) => {
+    const dayLabel = i === 0 ? esc(lang === 'en' ? (h.jour_en || h.jour_fr) : h.jour_fr) : '';
+    return '<div class="hours-row"><span class="hours-day">' + dayLabel + '</span><span class="hours-time">' +
+      esc(h.ouverture) + ' – ' + esc(h.fermeture) + '</span></div>';
+  }).join('');
+}
+
 // ── Café (World Peace Café) ──
 function renderCafe() {
   const items = sheetData.cafe || FALLBACK_CAFE;
-  const hours = (sheetData.horaires || FALLBACK_HORAIRES).filter(r => r.lieu === 'cafe' || !r.lieu || r.lieu === '');
-
-  // Build day keys from hours data for café tabs
-  const dayOrder = ['ven-27','sam-28','dim-29','lun-30'];
-  // Map hour entries to day keys
-  const cafeDayMap = {};
-  hours.forEach(h => {
-    const jourFr = h.jour_fr || '';
-    // Try to match day key from label
-    for (const dk of dayOrder) {
-      const lbl = DAY_LABELS[dk];
-      if (lbl && (jourFr.toLowerCase().includes(lbl.fr.toLowerCase().replace('.','')) || jourFr.toLowerCase().includes(dk.split('-')[0]))) {
-        cafeDayMap[dk] = h;
-        break;
-      }
-    }
-  });
-  const cafeDays = dayOrder.filter(d => cafeDayMap[d]);
+  const cafeHours = hoursByDay('cafe');
+  const cafeDayMap = cafeHours.map;
+  const cafeDays = cafeHours.days;
 
   // Add "Voir la carte" as special tab (only if visible in config)
   const allTabs = cafeCarteVisible ? [...cafeDays, '__carte__'] : [...cafeDays];
@@ -1460,8 +1557,8 @@ function renderCafe() {
       cats[cat].push(it);
     });
     const menuHtml = Object.entries(cats).map(([cat, its]) =>
-      '<div class="menu-cat"><div class="menu-cat-label">' + cat + '</div>' +
-      its.map(it => '<div class="menu-row"><span class="menu-name">' + (lang === 'en' ? (it.nom_en||it.nom_fr) : it.nom_fr) + '</span><span class="menu-price">' + (it.prix||'') + '</span></div>').join('') +
+      '<div class="menu-cat"><div class="menu-cat-label">' + esc(cat) + '</div>' +
+      its.map(it => '<div class="menu-row"><span class="menu-name">' + esc(lang === 'en' ? (it.nom_en||it.nom_fr) : it.nom_fr) + dietBadgesHtml(it) + '</span><span class="menu-price">' + esc(it.prix||'') + '</span></div>').join('') +
       '</div>'
     ).join('');
     body.innerHTML = '<div class="card"><div class="card-header"><div class="card-icon cafe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg></div><div><div class="card-title">World Peace Café</div></div></div>' +
@@ -1469,11 +1566,10 @@ function renderCafe() {
       '<div class="menu-note">' + t(I18N.cafe_note) + '</div></div>';
   } else {
     // Show hours for selected day
-    const h = cafeDayMap[activeCafeDay];
-    if (h) {
-      const dayLabel = lang === 'en' ? (h.jour_en||h.jour_fr) : h.jour_fr;
+    const list = cafeDayMap[activeCafeDay];
+    if (list && list.length) {
       body.innerHTML = '<div class="card"><div class="card-header"><div class="card-icon cafe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg></div><div><div class="card-title">World Peace Café</div></div></div>' +
-        '<div class="hours-row"><span class="hours-day">' + dayLabel + '</span><span class="hours-time">' + h.ouverture + ' – ' + h.fermeture + '</span></div>' +
+        hoursRowsHtml(list) +
         '<div class="menu-note">' + t(I18N.cafe_note) + '</div></div>';
     } else {
       body.innerHTML = '<div class="card"><p style="color:var(--text-muted);text-align:center;padding:20px">' + (lang === 'fr' ? 'Horaires non disponibles pour ce jour' : 'Hours not available for this day') + '</p></div>';
@@ -1483,32 +1579,18 @@ function renderCafe() {
 
 // ── Boutique ──
 function renderBoutique() {
-  const hours = (sheetData.horaires || FALLBACK_HORAIRES).filter(r => r.lieu === 'shop');
-
-  // Build day keys from hours data
-  const dayOrder = ['ven-27','sam-28','dim-29','lun-30'];
-  const boutiqueDayMap = {};
-  hours.forEach(h => {
-    const jourFr = h.jour_fr || '';
-    for (const dk of dayOrder) {
-      const lbl = DAY_LABELS[dk];
-      if (lbl && (jourFr.toLowerCase().includes(lbl.fr.toLowerCase().replace('.','')) || jourFr.toLowerCase().includes(dk.split('-')[0]))) {
-        boutiqueDayMap[dk] = h;
-        break;
-      }
-    }
-  });
-  const boutiqueDays = dayOrder.filter(d => boutiqueDayMap[d]);
+  const shopHours = hoursByDay('shop');
+  const boutiqueDayMap = shopHours.map;
+  const boutiqueDays = shopHours.days;
 
   if (boutiqueDays.length) {
     if (!boutiqueDays.includes(activeBoutiqueDay)) activeBoutiqueDay = boutiqueDays[0];
     renderDays('boutiqueDayStrip', boutiqueDays, activeBoutiqueDay, 'selectBoutiqueDay');
 
-    const h = boutiqueDayMap[activeBoutiqueDay];
-    const dayLabel = h ? (lang === 'en' ? (h.jour_en||h.jour_fr) : h.jour_fr) : '';
-    document.getElementById('boutiqueBody').innerHTML = h
+    const list = boutiqueDayMap[activeBoutiqueDay] || [];
+    document.getElementById('boutiqueBody').innerHTML = list.length
       ? '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique du Dharma',en:'Dharma Shop'}) + '</div></div></div>' +
-        '<div class="hours-row"><span class="hours-day">' + dayLabel + '</span><span class="hours-time">' + h.ouverture + ' – ' + h.fermeture + '</span></div>' +
+        hoursRowsHtml(list) +
         '<div class="menu-note">' + t(I18N.boutique_pay) + '</div></div>'
       : '';
   } else {
@@ -1539,6 +1621,27 @@ const ALLERGENS = {
   mollusques:{icon:'🐚', fr:'Mollusques',         en:'Molluscs'}
 };
 
+// ── Accueil / Info (onglet Infos) ──
+let activeInfoDay = 'ven-27';
+function selectInfoDay(k) { activeInfoDay = k; renderAccueil(); }
+function renderAccueil() {
+  const strip = document.getElementById('infoDayStrip');
+  const body = document.getElementById('infoHoursBody');
+  if (!strip || !body) return;
+  const h = hoursByDay('info');
+  if (!h.days.length) { strip.innerHTML = ''; body.innerHTML = ''; return; }
+  if (!h.days.includes(activeInfoDay)) {
+    const n = new Date();
+    const today = (n.getFullYear() === 2026 && n.getMonth() === 10) ? HOURS_DAY_ORDER.find(k => +k.split('-')[1] === n.getDate()) : null;
+    activeInfoDay = h.days.includes(today) ? today : h.days[0];
+  }
+  renderDays('infoDayStrip', h.days, activeInfoDay, 'selectInfoDay');
+  body.innerHTML = '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>' +
+    '<div><div class="card-title">' + t(I18N.s_accueil) + '</div><div class="card-sub">' + t(I18N.accueil_lieu) + '</div></div></div>' +
+    hoursRowsHtml(h.map[activeInfoDay] || []) +
+    '<div class="menu-note">' + t(I18N.accueil_note) + '</div></div>';
+}
+
 let _allergenSvcIndex = 0;
 
 function renderMeals() {
@@ -1567,7 +1670,6 @@ function renderMeals() {
     services[key].dishes.push(r);
   });
 
-  const dietLabels = {veg:{fr:'Végétarien',en:'Vegetarian'}, vgf:{fr:'Végan SG',en:'Vegan GF'}};
 
   // Check if any dish in a service has allergen info
   function svcHasAllergens(dishes) {
@@ -1585,15 +1687,12 @@ function renderMeals() {
           (lang === 'fr' ? 'Allergènes' : 'Allergens') + '</button>'
         : '';
       return '<div class="card"><div class="meal-service">' +
-        '<div class="meal-svc-header"><div class="meal-svc-title">' + s.name + '</div>' + btnHtml + '</div>' +
-        '<div class="meal-svc-time">' + s.time + '</div>' +
+        '<div class="meal-svc-header"><div class="meal-svc-title">' + esc(s.name) + '</div>' + btnHtml + '</div>' +
+        '<div class="meal-svc-time">' + esc(s.time) + '</div>' +
         '<div class="meal-dishes">' +
         s.dishes.map(d => {
-          let diets = (d.regime || '').split(',').map(x => x.trim()).filter(Boolean);
-          if (d.vegan === true || d.vegan === 'true') { if (!diets.includes('veg')) diets.push('veg'); }
-          if (d.sans_gluten === true || d.sans_gluten === 'true') { if (!diets.includes('vgf')) diets.push('vgf'); }
-          return '<div class="meal-dish"><div class="meal-dish-name">' + (lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr) + '</div>' +
-            '<div class="diet-badges">' + diets.map(dt => '<span class="diet-badge ' + dt + '">' + t(dietLabels[dt] || {fr:dt,en:dt}) + '</span>').join('') + '</div></div>';
+          return '<div class="meal-dish"><div class="meal-dish-name">' + esc(lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr) + '</div>' +
+            '<div class="diet-badges">' + dietBadgesHtml(d) + '</div></div>';
         }).join('') +
         '</div></div></div>';
     }).join('') +
@@ -1617,7 +1716,7 @@ function openAllergenModal(svcIdx) {
   if (!s) return;
 
   let html = '<div class="allergen-modal-title">' + (lang === 'fr' ? 'Allergènes' : 'Allergens') + '</div>';
-  html += '<div class="allergen-modal-sub">' + s.name + ' — ' + s.time + '</div>';
+  html += '<div class="allergen-modal-sub">' + esc(s.name) + ' — ' + esc(s.time) + '</div>';
 
   s.dishes.forEach(d => {
     const name = lang === 'en' ? (d.plat_en || d.plat_fr) : d.plat_fr;
@@ -1625,19 +1724,19 @@ function openAllergenModal(svcIdx) {
     const note = lang === 'en' ? (d.allergenes_note_en || d.allergenes_note_fr || '') : (d.allergenes_note_fr || '');
 
     html += '<div class="allergen-dish-block">';
-    html += '<div class="allergen-dish-name">' + name + '</div>';
+    html += '<div class="allergen-dish-name">' + esc(name) + '</div>';
     if (codes.length) {
       html += '<div class="allergen-icons">' +
         codes.map(c => {
           const a = ALLERGENS[c];
           return a
             ? '<span class="allergen-chip"><span class="a-icon">' + a.icon + '</span> ' + t(a) + '</span>'
-            : '<span class="allergen-chip">' + c + '</span>';
+            : '<span class="allergen-chip">' + esc(c) + '</span>';
         }).join('') + '</div>';
     } else {
       html += '<div class="allergen-none">' + (lang === 'fr' ? 'Aucun allergène déclaré' : 'No declared allergens') + '</div>';
     }
-    if (note) html += '<div class="allergen-note">' + note + '</div>';
+    if (note) html += '<div class="allergen-note">' + esc(note) + '</div>';
     html += '</div>';
   });
 
@@ -1965,6 +2064,18 @@ function saveDataCache(data) {
   } catch(e) { /* quota exceeded — ignore */ }
 }
 
+function saveConfigCache(cfg) {
+  try { localStorage.setItem('cd2026-config-cache', JSON.stringify(cfg || {})); } catch(e) { /* ignore */ }
+}
+
+function loadConfigCache() {
+  try {
+    const raw = localStorage.getItem('cd2026-config-cache');
+    const v = raw ? JSON.parse(raw) : null;
+    return v && typeof v === 'object' ? v : null;
+  } catch(e) { return null; }
+}
+
 function loadDataCache() {
   try {
     const raw = localStorage.getItem('cd2026-data-cache');
@@ -2040,6 +2151,7 @@ function renderAll() {
   renderCafe();
   renderBoutique();
   renderMeals();
+  renderAccueil();
   renderInfos();
   updateAlertBell(); // update bell badge on refresh, popups handled separately after splash
 }
@@ -2070,6 +2182,7 @@ function renderAll() {
     if (cached.alertes) sheetData.alertes = cached.alertes;
     console.log('[CD2026] Données du cache chargées');
   }
+  applyConfig(loadConfigCache());
 
   renderAll();
   const loaded = await loadSheetData();

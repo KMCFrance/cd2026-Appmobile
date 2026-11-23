@@ -840,15 +840,15 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
      ══════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-card">
-    <h1>Administration CD2026</h1>
-    <p class="subtitle">Celebration du Dharma 2026</p>
+    <h1 id="login-titre">Administration CD2026</h1>
+    <p class="subtitle" id="login-sous-titre">Célébration du Dharma 2026</p>
 
     <!-- Setup form (first time) -->
     <div id="setup-form" style="display:none">
       <div class="setup-note">
-        Premiere configuration : choisissez un mot de passe administrateur.
+        Première configuration : choisissez un mot de passe administrateur.
       </div>
-      <form onsubmit="return handleSetup()">
+      <form onsubmit="handleSetup(); return false;">
         <div class="field">
           <label for="setup-pw">Mot de passe</label>
           <input type="password" id="setup-pw" required autocomplete="new-password" minlength="4">
@@ -858,13 +858,13 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
           <input type="password" id="setup-pw2" required autocomplete="new-password" minlength="4">
         </div>
         <div id="setup-error" class="error-msg" style="display:none"></div>
-        <button type="submit" class="btn btn-primary btn-block" id="setup-btn">Creer le mot de passe</button>
+        <button type="submit" class="btn btn-primary btn-block" id="setup-btn">Créer le mot de passe</button>
       </form>
     </div>
 
     <!-- Login form -->
     <div id="login-form" style="display:none">
-      <form onsubmit="return handleLogin()">
+      <form onsubmit="handleLogin(); return false;">
         <div class="field">
           <label for="login-pw">Mot de passe</label>
           <input type="password" id="login-pw" required autocomplete="current-password">
@@ -886,9 +886,9 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
      ══════════════════════════════════════ -->
 <div id="dashboard">
   <div class="topbar">
-    <h2>Admin CD2026</h2>
+    <h2 id="topbar-titre">Admin CD2026</h2>
     <div class="topbar-links">
-      <a href="index.html" target="_blank">Previsualiser</a>
+      <a href="index.html" target="_blank" id="lien-apercu">Previsualiser</a>
       <button class="btn-logout" onclick="logout()">Deconnexion</button>
     </div>
   </div>
@@ -924,7 +924,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 
 <script>
 /* ══════════════════════════════════════
-   14 ALLERGENES REGLEMENTAIRES
+   14 ALLERGÈNES RÉGLEMENTAIRES
    ══════════════════════════════════════ */
 const ALLERGEN_LIST = [
   {code:'gluten',      icon:'🌾', label:'Gluten'},
@@ -950,6 +950,9 @@ const CONFIG = {
   FIREBASE_URL: 'https://cd2026-appmobile-default-rtdb.europe-west1.firebasedatabase.app', // Same URL as in index.html
   PASSWORD_HASH: '', // Not used — hash is stored in Firebase
 };
+
+// Clé de session de l'admin CD2026
+function cleSession() { return 'cd2026_admin'; }
 
 /* ══════════════════════════════════════
    SCHEMA — defines each section
@@ -1029,6 +1032,7 @@ function buildSections() {
         { key: 'lieu', label: 'Lieu', type: 'select', options: [
           { value: 'cafe', label: 'World Peace Café' },
           { value: 'shop', label: 'Boutique' },
+          { value: 'info', label: 'Accueil / Info' },
         ]},
         { key: 'jour_fr', label: 'Jour (FR)', type: 'text' },
         { key: 'jour_en', label: 'Jour (EN)', type: 'text' },
@@ -1051,9 +1055,9 @@ function buildSections() {
         { key: 'plat_en', label: 'Plat (EN)', type: 'text', full: true },
         { key: 'vegan', label: 'Végan', type: 'checkbox' },
         { key: 'sans_gluten', label: 'Sans gluten', type: 'checkbox' },
-        { key: 'allergenes', label: 'Allergenes', type: 'allergen-picker', full: true },
-        { key: 'allergenes_note_fr', label: 'Note allergenes (FR)', type: 'text', full: true, placeholder: 'Peut contenir des traces de...' },
-        { key: 'allergenes_note_en', label: 'Note allergenes (EN)', type: 'text', full: true, placeholder: 'May contain traces of...' },
+        { key: 'allergenes', label: 'Allergènes', type: 'allergen-picker', full: true },
+        { key: 'allergenes_note_fr', label: 'Note allergènes (FR)', type: 'text', full: true, placeholder: 'Peut contenir des traces de...' },
+        { key: 'allergenes_note_en', label: 'Note allergènes (EN)', type: 'text', full: true, placeholder: 'May contain traces of...' },
       ],
     },
     infos: {
@@ -1099,8 +1103,16 @@ let addingNew = {};   // { sectionKey: true } if the "add" form is open
 let addingNewGroup = {};  // { sectionKey: groupKey } — add within a specific group
 let expandedItems = {}; // { sectionKey: Set of indices }
 let lastSaved = {};   // { sectionKey: timestamp string }
-let horaireFilter = 'cafe'; // 'cafe' or 'shop'
+let horaireFilter = 'cafe'; // 'cafe' | 'shop' | 'info'
+// Pôles (lieux) des horaires : libellés de l'admin
+const LIEUX_HORAIRES = { cafe: 'Café', shop: 'Boutique', info: 'Accueil / Info' };
+function lieuLabel(l) { return LIEUX_HORAIRES[l] || l; }
 let renamingCat = null; // { fr: oldName, newFr: '', newEn: '' }
+// Réglages (config/…) modifiés depuis le chargement : seuls ceux-ci sont écrits à la sauvegarde,
+// pour ne jamais écraser les réglages enregistrés entre-temps par un autre organisateur.
+let configDirty = new Set(); // 'jourOptions' | 'serviceTypes' | 'cafeVisible' | 'disabledServices'
+// Sections modifiées indirectement (renommage d'un jour) : enregistrées avec la prochaine sauvegarde
+let sectionsEnAttente = new Set();
 
 /* ══════════════════════════════════════
    UTILS
@@ -1185,7 +1197,7 @@ function setLoading(btnId, loading) {
 async function initAuth() {
   // Check sessionStorage first
   try {
-    if (sessionStorage.getItem('cd2026_admin') === 'true') {
+    if (sessionStorage.getItem(cleSession()) === 'true') {
       showDashboard();
       return;
     }
@@ -1202,13 +1214,13 @@ async function initAuth() {
     }
   } catch(e) {
     document.getElementById('login-loading').style.display = 'none';
-    // If Firebase is not configured, show a helpful message
+    // Base injoignable : on ne propose SURTOUT PAS de créer un mot de passe (cela écraserait l'existant).
+    const err = document.getElementById('setup-error');
     document.getElementById('setup-form').style.display = 'block';
-    if (!CONFIG.FIREBASE_URL) {
-      document.getElementById('setup-error').textContent = 'Veuillez configurer FIREBASE_URL dans le fichier admin.html.';
-      document.getElementById('setup-error').style.display = 'block';
-      document.getElementById('setup-btn').disabled = true;
-    }
+    document.getElementById('setup-btn').disabled = true;
+    err.textContent = 'Impossible de joindre la base de données (connexion internet ?). Rechargez la page dans un instant.';
+    err.style.display = 'block';
+    document.querySelectorAll('#setup-form input').forEach(i => { i.disabled = true; });
   }
 }
 
@@ -1233,8 +1245,11 @@ async function handleSetup() {
 
   try {
     const hash = await sha256(pw);
+    // Sécurité : ne jamais remplacer un mot de passe déjà créé (autre organisateur, base lente…)
+    const existant = await fbGet('config/passwordHash.json');
+    if (existant) { errEl.textContent = 'Un mot de passe existe déjà pour cette base : rechargez la page et connectez-vous.'; errEl.style.display = 'block'; setLoading('setup-btn', false); return false; }
     await fbPut('config/passwordHash.json', hash);
-    try { sessionStorage.setItem('cd2026_admin', 'true'); } catch(e) {}
+    try { sessionStorage.setItem(cleSession(), 'true'); } catch(e) {}
     showDashboard();
   } catch(e) {
     errEl.textContent = 'Erreur de connexion a Firebase. Verifiez la configuration.';
@@ -1254,7 +1269,7 @@ async function handleLogin() {
     const storedHash = await fbGet('config/passwordHash.json');
     const inputHash = await sha256(pw);
     if (inputHash === storedHash) {
-      try { sessionStorage.setItem('cd2026_admin', 'true'); } catch(e) {}
+      try { sessionStorage.setItem(cleSession(), 'true'); } catch(e) {}
       showDashboard();
     } else {
       errEl.textContent = 'Mot de passe incorrect.';
@@ -1270,7 +1285,7 @@ async function handleLogin() {
 }
 
 function logout() {
-  try { sessionStorage.removeItem('cd2026_admin'); } catch(e) {}
+  try { sessionStorage.removeItem(cleSession()); } catch(e) {}
   location.reload();
 }
 
@@ -1347,9 +1362,14 @@ async function loadData() {
         cafeVisible = configResult.cafeVisible !== false;
       }
       if (configResult.disabledServices && typeof configResult.disabledServices === 'object') {
-        disabledServices = configResult.disabledServices;
+        disabledServices = {};
+        for (const [d, v] of Object.entries(configResult.disabledServices)) {
+          const arr = Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+          if (arr.length) disabledServices[d] = arr;
+        }
       }
     }
+    configDirty = new Set();
     // Rebuild sections with loaded config
     SECTIONS = buildSections();
 
@@ -1420,6 +1440,7 @@ function renderSection() {
     html += `<div class="sub-filter">
       <button class="${horaireFilter==='cafe'?'active':''}" onclick="setHoraireFilter('cafe')">☕ World Peace Café</button>
       <button class="${horaireFilter==='shop'?'active':''}" onclick="setHoraireFilter('shop')">🛍 Boutique</button>
+      <button class="${horaireFilter==='info'?'active':''}" onclick="setHoraireFilter('info')">ℹ️ Accueil / Info</button>
     </div>`;
     items = items.filter(it => (it.lieu || 'cafe') === horaireFilter);
   }
@@ -1428,8 +1449,8 @@ function renderSection() {
   if (addingNew[key] && !useGroupedAdd) {
     html += `<div class="add-card">
       <div class="item-form">
-        <h4>Nouvel element</h4>
-        <div class="form-grid">${renderFields(schema.fields, {}, key, 'new')}</div>
+        <h4>Nouvel élément</h4>
+        <div class="form-grid">${renderFields(schema.fields, newFormValues(key), key, 'new')}</div>
         <div style="margin-top:12px; display:flex; gap:8px;">
           <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
           <button class="btn btn-outline" onclick="toggleAdd('${key}')">Annuler</button>
@@ -1480,12 +1501,14 @@ function renderGroupedItems(key, schema, displayItems) {
     });
 
     if (key === 'repas') {
-      // Show ALL days × ALL service types by default
-      const allDays = dayOrder; // all configured days, not just those with data
-      const daysToRender = allDays.length ? allDays : sortedDays;
+      // Show ALL configured days × ALL service types by default,
+      // puis les jours présents dans les plats mais absents de la liste des jours (jamais masqués)
+      const daysToRender = dayOrder.concat(sortedDays.filter(d => !dayOrder.includes(d)));
 
       for (const day of daysToRender) {
-        const dayLabel = (JOUR_OPTIONS.find(j => j.value === day) || {}).label || day || 'Non défini';
+        const known = dayOrder.includes(day);
+        const dayLabel = known ? ((JOUR_OPTIONS.find(j => j.value === day) || {}).label || day)
+          : `⚠ Jour absent de la liste des jours : ${day || 'non défini'}`;
         html += `<div class="group-header">${escHtml(dayLabel)}</div>`;
 
         // Build service groups from existing items for this day
@@ -1499,18 +1522,19 @@ function renderGroupedItems(key, schema, displayItems) {
         }
 
         // Show ALL service types (from SERVICE_TYPES), even if no dishes yet
+        // (jour absent de la liste : seulement ses plats, regroupés par service, pour pouvoir les corriger)
         const dayDisabled = disabledServices[day] || [];
-        for (const st of SERVICE_TYPES) {
+        for (const st of (known ? SERVICE_TYPES : [])) {
           const svcFr = st.value_fr;
           const isDisabled = dayDisabled.includes(svcFr);
-          const dayEsc = escAttr(day);
-          const svcEsc = escAttr(svcFr);
+          const dayArg = jsArg(day);
+          const svcArg = jsArg(svcFr);
 
           html += `<div class="repas-svc-header${isDisabled ? ' disabled' : ''}">
             <input type="checkbox" class="repas-svc-toggle" ${!isDisabled ? 'checked' : ''}
-              onchange="toggleRepasService('${dayEsc}','${svcEsc}',this.checked)" title="${isDisabled ? 'Activer' : 'Désactiver'} ${escHtml(svcFr)}">
+              onchange="toggleRepasService(${dayArg},${svcArg},this.checked)" title="${isDisabled ? 'Activer' : 'Désactiver'} ${escAttr(svcFr)}">
             <span>${escHtml(svcFr)}</span>
-            ${!isDisabled ? `<button class="repas-svc-add" onclick="startRepasServiceAdd('${dayEsc}','${svcEsc}')">+ Plat</button>` : ''}
+            ${!isDisabled ? `<button class="repas-svc-add" onclick="startRepasServiceAdd(${dayArg},${svcArg})">+ Plat</button>` : ''}
           </div>`;
 
           if (!isDisabled) {
@@ -1524,7 +1548,8 @@ function renderGroupedItems(key, schema, displayItems) {
             // Inline add form for this day+service
             if (addingNewGroup['repas'] === day + '|' + svcFr) {
               const svcEn = st.value_en || '';
-              const prefilled = { jour: day, service_fr: svcFr, service_en: svcEn };
+              // Valeurs déjà saisies conservées (ex. après le choix d'un allergène, qui redessine le formulaire)
+              const prefilled = Object.assign({}, newFormValues('repas'), { jour: day, service_fr: svcFr, service_en: svcEn });
               html += `<div class="add-card">
                 <div class="item-form">
                   <h4>Nouveau plat — ${escHtml(svcFr)}</h4>
@@ -1540,7 +1565,7 @@ function renderGroupedItems(key, schema, displayItems) {
         }
 
         // Also show any service entries that don't match SERVICE_TYPES (legacy/custom)
-        const knownSvcs = SERVICE_TYPES.map(s => s.value_fr);
+        const knownSvcs = known ? SERVICE_TYPES.map(s => s.value_fr) : [];
         const extraSvcs = Object.keys(svcGroups).filter(s => !knownSvcs.includes(s));
         for (const svc of extraSvcs) {
           html += `<div class="repas-svc-header"><span>${escHtml(svc)}</span></div>`;
@@ -1552,7 +1577,8 @@ function renderGroupedItems(key, schema, displayItems) {
     } else {
       // Programme: just group by day
       for (const day of sortedDays) {
-        const dayLabel = (JOUR_OPTIONS.find(j => j.value === day) || {}).label || day || 'Non défini';
+        const dayLabel = dayOrder.includes(day) ? ((JOUR_OPTIONS.find(j => j.value === day) || {}).label || day)
+          : `⚠ Jour absent de la liste des jours : ${day || 'non défini'}`;
         html += `<div class="group-header">${escHtml(dayLabel)}</div>`;
         for (const entry of groups[day]) {
           html += renderItemCard(key, schema, entry.item, entry.realIdx, allItems.length);
@@ -1578,13 +1604,30 @@ function renderGroupedItems(key, schema, displayItems) {
       html += '<div class="empty-state">Aucun element.</div>';
     }
 
+    // Formulaire d'ajout d'un élément dans une catégorie (champs catégorie masqués)
+    const cafeAddForm = cat => {
+      const prefilled = Object.assign({ categorie_fr: cat }, newFormValues(key));
+      const match = (data[key]||[]).find(it => it.categorie_fr === cat);
+      if (match && prefilled.categorie_en === undefined) prefilled.categorie_en = match.categorie_en || '';
+      return `<div class="add-card">
+          <div class="item-form">
+            <h4>Nouvel élément — ${escHtml(cat)}</h4>
+            <div class="form-grid">${renderFields(schema.fields, prefilled, key, 'new', true)}</div>
+            <div style="margin-top:12px; display:flex; gap:8px;">
+              <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
+              <button class="btn btn-outline" onclick="cancelGroupAdd('${key}')">Annuler</button>
+            </div>
+          </div>
+        </div>`;
+    };
+
     for (const cat of categories) {
-      const catEsc = escAttr(cat);
+      const catArg = jsArg(cat);
       html += `<div class="group-header">
         <span>${escHtml(cat)}</span>
         <div class="group-actions">
-          <button onclick="renameCategoryPrompt('${catEsc}')" title="Renommer">&#9998;</button>
-          <button onclick="deleteCategory('${catEsc}')" title="Supprimer catégorie" style="color:var(--danger);">&#128465;</button>
+          <button onclick="renameCategoryPrompt(${catArg})" title="Renommer">&#9998;</button>
+          <button onclick="deleteCategory(${catArg})" title="Supprimer catégorie" style="color:var(--danger);">&#128465;</button>
         </div>
       </div>`;
 
@@ -1594,22 +1637,17 @@ function renderGroupedItems(key, schema, displayItems) {
 
       // Add within category button — hide category fields
       if (addingNewGroup[key] === cat) {
-        const prefilled = { categorie_fr: cat };
-        const match = (data[key]||[]).find(it => it.categorie_fr === cat);
-        if (match) prefilled.categorie_en = match.categorie_en || '';
-        html += `<div class="add-card">
-          <div class="item-form">
-            <h4>Nouvel element — ${escHtml(cat)}</h4>
-            <div class="form-grid">${renderFields(schema.fields, prefilled, key, 'new', true)}</div>
-            <div style="margin-top:12px; display:flex; gap:8px;">
-              <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
-              <button class="btn btn-outline" onclick="cancelGroupAdd('${key}')">Annuler</button>
-            </div>
-          </div>
-        </div>`;
+        html += cafeAddForm(cat);
       } else {
-        html += `<button class="group-add-btn" onclick="startGroupAdd('cafe', '${catEsc}')">+ Ajouter dans ${escHtml(cat)}</button>`;
+        html += `<button class="group-add-btn" onclick="startGroupAdd('cafe', ${catArg})">+ Ajouter dans ${escHtml(cat)}</button>`;
       }
+    }
+
+    // Nouvelle catégorie (pas encore d'élément) : en-tête + formulaire du premier élément
+    const newCat = addingNewGroup[key];
+    if (typeof newCat === 'string' && newCat && !categories.includes(newCat)) {
+      html += `<div class="group-header"><span>${escHtml(newCat)} <small style="font-weight:400;color:var(--text-muted);">(nouvelle catégorie)</small></span></div>`;
+      html += cafeAddForm(newCat);
     }
 
     // Add new category
@@ -1629,11 +1667,10 @@ function renderGroupedItems(key, schema, displayItems) {
     });
 
     for (const day of dayOrder) {
-      const dayEsc = escAttr(day);
       html += `<div class="group-header">
         <span>${escHtml(day)}</span>
         <div class="group-actions">
-          <button onclick="duplicateHoraireDay('${dayEsc}')" title="Dupliquer sur tous les jours">📋 Dupliquer</button>
+          <button onclick="duplicateHoraireDay(${jsArg(day)})" title="Dupliquer sur tous les jours">📋 Dupliquer</button>
         </div>
       </div>`;
       for (const entry of dayGroups[day]) {
@@ -1645,8 +1682,8 @@ function renderGroupedItems(key, schema, displayItems) {
     if (addingNew[key]) {
       html += `<div class="add-card">
         <div class="item-form">
-          <h4>Nouvel horaire — ${horaireFilter === 'cafe' ? 'Café' : 'Boutique'}</h4>
-          <div class="form-grid">${renderFields(schema.fields, { lieu: horaireFilter }, key, 'new')}</div>
+          <h4>Nouvel horaire — ${escHtml(lieuLabel(horaireFilter))}</h4>
+          <div class="form-grid">${renderFields(schema.fields, Object.assign({ lieu: horaireFilter }, newFormValues(key)), key, 'new')}</div>
           <div style="margin-top:12px; display:flex; gap:8px;">
             <button class="btn btn-primary" onclick="addItem('${key}')">Ajouter</button>
             <button class="btn btn-outline" onclick="toggleAdd('${key}')">Annuler</button>
@@ -1658,7 +1695,7 @@ function renderGroupedItems(key, schema, displayItems) {
     }
 
     if (displayItems.length === 0 && !addingNew[key]) {
-      html += `<div class="empty-state">Aucun horaire pour ${horaireFilter === 'cafe' ? 'le café' : 'la boutique'}.</div>`;
+      html += `<div class="empty-state">Aucun horaire pour : ${escHtml(lieuLabel(horaireFilter))}.</div>`;
     }
   }
 
@@ -1671,10 +1708,13 @@ function renderItemCard(key, schema, item, idx, totalCount) {
   const title = item[schema.titleField] || '(sans titre)';
   const sub = typeof schema.subField === 'function' ? schema.subField(item) : '';
 
-  // Regime badges
+  // Regime badges (mêmes règles que l'app, y compris l'ancien champ « regime »)
   let badges = '';
-  if (item.vegan === true || item.vegan === 'true') badges += ' <span class="pv-badge pv-vegan">🌱</span>';
-  if (item.sans_gluten === true || item.sans_gluten === 'true') badges += ' <span class="pv-badge pv-gf">GF</span>';
+  if (key === 'repas' || key === 'cafe') {
+    const fl = dietFlags(item);
+    if (fl.vegan) badges += ' <span class="pv-badge pv-vegan" title="Végan">🌱</span>';
+    if (fl.sg) badges += ' <span class="pv-badge pv-gf" title="Sans gluten">SG</span>';
+  }
 
   return `<div class="item-card">
     <div class="item-summary">
@@ -1687,8 +1727,8 @@ function renderItemCard(key, schema, item, idx, totalCount) {
         <button class="btn-delete" onclick="deleteItem('${key}', ${idx})" title="Supprimer">&#128465;</button>
       </div>
       <div class="move-btns">
-        <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, -1)" title="Monter" ${idx===0?'disabled':''}>&#9650;</button>
-        <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, 1)" title="Descendre" ${idx===totalCount-1?'disabled':''}>&#9660;</button>
+        <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, -1)" title="Monter" ${neighbourIndex(key, idx, -1) < 0 ?'disabled':''}>&#9650;</button>
+        <button onclick="event.stopPropagation(); moveItem('${key}', ${idx}, 1)" title="Descendre" ${neighbourIndex(key, idx, 1) < 0 ?'disabled':''}>&#9660;</button>
       </div>
     </div>
     <div class="item-form ${isOpen ? 'open' : ''}" id="form-${key}-${idx}">
@@ -1728,7 +1768,10 @@ function renderFields(fields, item, sectionKey, idx, hideCategories) {
     }
 
     if (f.type === 'checkbox') {
-      const checked = val === true || val === 'true';
+      // Végan / sans gluten : pré-cochées aussi d'après l'ancien champ « regime » (plats plus anciens)
+      const checked = (f.key === 'vegan' || f.key === 'sans_gluten')
+        ? dietFlags(item)[f.key === 'vegan' ? 'vegan' : 'sg']
+        : estVrai(val);
       input = `<label class="regime-check">
         <input type="checkbox" id="${inputId}" ${checked ? 'checked' : ''}
           onchange="updateField('${sectionKey}', '${idx}', '${f.key}', this.checked)">
@@ -1740,7 +1783,7 @@ function renderFields(fields, item, sectionKey, idx, hideCategories) {
       const tags = codes.map(c => {
         const a = ALLERGEN_LIST.find(x=>x.code===c);
         const lbl = a ? a.icon + ' ' + a.label : c;
-        return `<span class="allergen-tag">${lbl}<span class="a-remove" onclick="removeAllergen('${sectionKey}','${idx}','${f.key}','${c}')">&times;</span></span>`;
+        return `<span class="allergen-tag">${a ? lbl : escHtml(lbl)}<span class="a-remove" onclick="removeAllergen('${sectionKey}','${idx}','${f.key}',${jsArg(c)})">&times;</span></span>`;
       }).join('');
       const pickerId = `ap-${sectionKey}-${idx}`;
       input = `<div class="allergen-picker" id="${inputId}-tags">${tags}` +
@@ -1752,9 +1795,14 @@ function renderFields(fields, item, sectionKey, idx, hideCategories) {
         (ALLERGEN_LIST.filter(a=>!codes.includes(a.code)).length === 0 ? '<div style="padding:10px;color:var(--text-muted);font-size:0.85rem;">Tous ajoutés</div>' : '') +
         `</div></div></div>`;
     } else if (f.type === 'select') {
-      const opts = (typeof f.options === 'function' ? f.options() : f.options).map(o =>
-        `<option value="${o.value}" ${String(val) === String(o.value) ? 'selected' : ''}>${o.label}</option>`
+      const optList = (typeof f.options === 'function' ? f.options() : f.options);
+      let opts = optList.map(o =>
+        `<option value="${escAttr(o.value)}" ${String(val) === String(o.value) ? 'selected' : ''}>${escHtml(o.label)}</option>`
       ).join('');
+      // Valeur actuelle absente de la liste (ex. jour supprimé) : la montrer plutôt que « — »
+      if (val !== '' && val != null && !optList.some(o => String(o.value) === String(val))) {
+        opts += `<option value="${escAttr(val)}" selected>${escHtml(val)} (absent de la liste)</option>`;
+      }
       // For service_fr in repas: auto-fill service_en on change
       const extraOnChange = (sectionKey === 'repas' && f.key === 'service_fr')
         ? `autoFillServiceEn('${idx}', this.value);` : '';
@@ -1787,6 +1835,42 @@ function autoFillServiceEn(idx, valueFr) {
 
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Argument de fonction JS dans un attribut onclick="…" : chaîne JSON puis échappement HTML.
+// (escAttr seul ne suffit pas : le navigateur décode &#39; en ' avant d'exécuter le JS → « Boissons d'hiver » cassait les boutons)
+function jsArg(v) { return escAttr(JSON.stringify(String(v == null ? '' : v))); }
+
+/* ── Régimes : végan / sans gluten (booléens) ; ancien champ texte « regime » pour les plats plus anciens ──
+   Chaque champ présent l'emporte ; sinon on le déduit de « regime » : 'vgf' = végan sans gluten, 'veg' = végétarien (rien). */
+function estVrai(v) { return v === true || v === 'true' || v === 1 || v === '1' || v === 'oui'; }
+function dietFlags(d) {
+  const codes = String((d && d.regime) || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean);
+  const aVegan = d && d.vegan !== undefined && d.vegan !== null;
+  const aSG = d && d.sans_gluten !== undefined && d.sans_gluten !== null;
+  return {
+    vegan: aVegan ? estVrai(d.vegan) : codes.some(c => c === 'vgf' || c === 'vegan'),
+    sg:    aSG ? estVrai(d.sans_gluten) : codes.some(c => c === 'vgf' || c === 'sg' || c === 'gf' || c === 'sans_gluten'),
+  };
+}
+// Avant écriture : vegan / sans_gluten en vrais booléens, ancien « regime » converti puis retiré
+function normaliserElement(sectionKey, item) {
+  if (!item || typeof item !== 'object') return item;
+  const schema = SECTIONS[sectionKey];
+  const aCases = schema && schema.fields.some(f => f.key === 'vegan' || f.key === 'sans_gluten');
+  if (aCases) {
+    const fl = dietFlags(item);
+    item.vegan = fl.vegan;
+    item.sans_gluten = fl.sg;
+    delete item.regime;
+  }
+  if (schema) schema.fields.forEach(f => {
+    if (f.type === 'checkbox' && f.key !== 'vegan' && f.key !== 'sans_gluten') item[f.key] = estVrai(item[f.key]);
+  });
+  return item;
+}
+// Valeurs déjà saisies dans le formulaire « nouvel élément » d'une section
+function newFormValues(sectionKey) {
+  return Object.assign({}, (data._new && data._new[sectionKey]) || {});
+}
 
 /* ── Allergen picker helpers ── */
 function toggleAllergenDrop(pickerId) {
@@ -1834,6 +1918,8 @@ document.addEventListener('click', function(e) {
    ══════════════════════════════════════ */
 function toggleAdd(key) {
   addingNew[key] = !addingNew[key];
+  // Formulaire vide à chaque ouverture (sinon des valeurs d'une saisie annulée seraient réutilisées sans être visibles)
+  if (data._new) delete data._new[key];
   renderSection();
 }
 
@@ -1867,7 +1953,8 @@ function addItem(sectionKey) {
   // Collect values from the "new" temp store
   const temp = (data._new && data._new[sectionKey]) || {};
   schema.fields.forEach(f => {
-    newItem[f.key] = temp[f.key] !== undefined ? temp[f.key] : (f.default || '');
+    if (f.type === 'checkbox') newItem[f.key] = estVrai(temp[f.key]);   // vrai booléen, jamais ""
+    else newItem[f.key] = temp[f.key] !== undefined ? temp[f.key] : (f.default || '');
   });
 
   // For horaires, pre-fill lieu from filter
@@ -1912,7 +1999,7 @@ function addItem(sectionKey) {
   expandedItems[sectionKey] = new Set();
 
   renderSection();
-  toast('Element ajoute (pensez a sauvegarder)');
+  toast('Élément ajouté (pensez à sauvegarder)');
 }
 
 function deleteItem(sectionKey, idx) {
@@ -1933,7 +2020,7 @@ function deleteItem(sectionKey, idx) {
   }
 
   renderSection();
-  toast('Element supprime (pensez a sauvegarder)');
+  toast('Élément supprimé (pensez à sauvegarder)');
 }
 
 /* ── Horaire filter ── */
@@ -1945,9 +2032,9 @@ function setHoraireFilter(val) {
 /* ── Grouped add (café categories) ── */
 function startGroupAdd(sectionKey, groupVal) {
   addingNewGroup[sectionKey] = groupVal;
-  // Pre-fill category
+  // Pre-fill category (formulaire vide : pas de valeurs d'une autre saisie)
   if (!data._new) data._new = {};
-  if (!data._new[sectionKey]) data._new[sectionKey] = {};
+  data._new[sectionKey] = {};
   data._new[sectionKey].categorie_fr = groupVal;
   // Find matching en category from existing items
   const match = (data[sectionKey]||[]).find(it => it.categorie_fr === groupVal);
@@ -1981,34 +2068,46 @@ function toggleRepasService(day, svcFr, enabled) {
   } else {
     if (!disabledServices[day].includes(svcFr)) disabledServices[day].push(svcFr);
   }
+  configDirty.add('disabledServices');
   renderSection();
-  toast(enabled ? `${svcFr} activé pour ce jour` : `${svcFr} masqué pour ce jour (pensez à sauvegarder)`);
+  toast(enabled ? `${svcFr} activé pour ce jour (pensez à sauvegarder)` : `${svcFr} masqué pour ce jour (pensez à sauvegarder)`);
 }
 
 /* ── Category management (café) ── */
 function addCategoryPrompt() {
   const name = prompt('Nom de la nouvelle catégorie (FR) :');
   if (!name || !name.trim()) return;
-  const nameEn = prompt('Nom en anglais (EN) :') || name;
-  // Create an empty item placeholder in that category
-  startGroupAdd('cafe', name.trim());
-  if (data._new && data._new.cafe) {
-    data._new.cafe.categorie_en = nameEn.trim();
-  }
-  renderSection();
+  const nom = name.trim();
+  const nameEn = (prompt('Nom en anglais (EN) :') || nom).trim() || nom;
+  const existe = (data.cafe || []).some(it => it.categorie_fr === nom);
+  // Ouvre le formulaire du premier élément de la catégorie (catégorie existante : son formulaire habituel)
+  startGroupAdd('cafe', nom);
+  if (!existe) data._new.cafe.categorie_en = nameEn;
+  const champ = document.getElementById('field-cafe-new-nom_fr');
+  if (champ) { champ.scrollIntoView({ block: 'center' }); champ.focus(); }
+  toast(existe ? `La catégorie « ${nom} » existe déjà : ajoutez-y un élément.` : `Nouvelle catégorie « ${nom} » : ajoutez son premier élément.`);
 }
 
 function renameCategoryPrompt(oldCat) {
   const newFr = prompt('Nouveau nom (FR) :', oldCat);
-  if (!newFr || !newFr.trim() || newFr.trim() === oldCat) return;
-  const newEn = prompt('Nouveau nom (EN) :') || newFr;
+  if (!newFr || !newFr.trim()) return;
+  const match = (data.cafe || []).find(it => it.categorie_fr === oldCat);
+  const oldEn = match ? (match.categorie_en || '') : '';
+  const newEn = prompt('Nouveau nom (EN) :', oldEn);
+  if (newEn === null) return;
+  const fr = newFr.trim(), en = newEn.trim() || fr;
+  if (fr === oldCat && en === oldEn) return;
   // Rename all items with this category
   (data.cafe || []).forEach(item => {
     if (item.categorie_fr === oldCat) {
-      item.categorie_fr = newFr.trim();
-      item.categorie_en = newEn.trim();
+      item.categorie_fr = fr;
+      item.categorie_en = en;
     }
   });
+  if (addingNewGroup.cafe === oldCat) {
+    addingNewGroup.cafe = fr;
+    if (data._new && data._new.cafe) { data._new.cafe.categorie_fr = fr; data._new.cafe.categorie_en = en; }
+  }
   renderSection();
   toast('Catégorie renommée (pensez à sauvegarder)');
 }
@@ -2016,19 +2115,38 @@ function renameCategoryPrompt(oldCat) {
 function deleteCategory(cat) {
   const items = (data.cafe || []).filter(it => it.categorie_fr === cat);
   if (items.length > 0) {
-    if (!confirm(`Supprimer la catégorie "${cat}" et ses ${items.length} élément(s) ?`)) return;
+    if (!confirm(`Supprimer la catégorie « ${cat} » et ses ${items.length} élément(s) ?`)) return;
     data.cafe = (data.cafe || []).filter(it => it.categorie_fr !== cat);
   }
+  if (addingNewGroup.cafe === cat) cancelGroupAdd('cafe');
   // Reset expanded indices
   expandedItems.cafe = new Set();
   renderSection();
   toast('Catégorie supprimée (pensez à sauvegarder)');
 }
 
+/* ── ▲▼ : déplacement à l'intérieur du groupe affiché (jour, jour + service, catégorie, jour d'horaires) ── */
+function groupKeyOf(sectionKey, item) {
+  item = item || {};
+  if (sectionKey === 'programme') return item.jour || '';
+  if (sectionKey === 'repas') return (item.jour || '') + '|' + (item.service_fr || 'Autre');
+  if (sectionKey === 'cafe') return item.categorie_fr || 'Sans catégorie';
+  if (sectionKey === 'horaires') return (item.lieu || 'cafe') + '|' + (item.jour_fr || 'Non défini');
+  return '';
+}
+function neighbourIndex(sectionKey, idx, direction) {
+  const arr = data[sectionKey] || [];
+  const g = groupKeyOf(sectionKey, arr[idx]);
+  for (let i = idx + direction; i >= 0 && i < arr.length; i += direction) {
+    if (groupKeyOf(sectionKey, arr[i]) === g) return i;
+  }
+  return -1;
+}
+
 function moveItem(sectionKey, idx, direction) {
   const arr = data[sectionKey];
-  const newIdx = idx + direction;
-  if (newIdx < 0 || newIdx >= arr.length) return;
+  const newIdx = neighbourIndex(sectionKey, idx, direction);
+  if (newIdx < 0) return;
   [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
 
   // Adjust expanded indices
@@ -2047,17 +2165,26 @@ function moveItem(sectionKey, idx, direction) {
 
 async function saveCurrentSection() {
   const key = currentTab;
-  const sectionData = data[key] || [];
+  // Booléens végan / sans gluten normalisés, ancien champ « regime » converti
+  const sectionData = (data[key] || []).map(it => normaliserElement(key, it));
+  data[key] = sectionData;
 
   setLoading('save-btn', true);
   try {
-    // Save section data
+    // Save section data (uniquement cette section)
     await fbPut(`data/${key}.json`, sectionData);
-    // Also save config (dates, service types, café visibility)
+    sectionsEnAttente.delete(key);
+    for (const k of Array.from(sectionsEnAttente)) {
+      const autre = (data[k] || []).map(it => normaliserElement(k, it));
+      data[k] = autre;
+      await fbPut(`data/${k}.json`, autre);
+      sectionsEnAttente.delete(k);
+    }
+    // + uniquement les réglages modifiés (types de service, carte du café, services masqués)
     await saveConfig();
     const now = new Date();
     lastSaved[key] = now.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    toast(`${SECTIONS[key].label} sauvegarde avec succes !`);
+    toast(`${SECTIONS[key].label} sauvegardé avec succès !`);
     renderSection();
   } catch(e) {
     toast('Erreur lors de la sauvegarde.', true);
@@ -2065,11 +2192,19 @@ async function saveCurrentSection() {
   setLoading('save-btn', false);
 }
 
+// Écrit seulement les clés de config modifiées depuis le chargement (jamais toutes les clés),
 async function saveConfig() {
-  await fbPut('config/jourOptions.json', JOUR_OPTIONS);
-  await fbPut('config/serviceTypes.json', SERVICE_TYPES);
-  await fbPut('config/cafeVisible.json', cafeVisible);
-  await fbPut('config/disabledServices.json', disabledServices);
+  const valeurs = {
+    jourOptions: () => JOUR_OPTIONS,
+    serviceTypes: () => SERVICE_TYPES,
+    cafeVisible: () => cafeVisible,
+    disabledServices: () => disabledServices,
+  };
+  for (const k of Array.from(configDirty)) {
+    if (!valeurs[k]) { configDirty.delete(k); continue; }
+    await fbPut(`config/${k}.json`, valeurs[k]());
+    configDirty.delete(k);
+  }
 }
 
 /* ══════════════════════════════════════
@@ -2092,9 +2227,11 @@ function renderDateManager() {
 function addDate() {
   const val = prompt('Identifiant du jour (ex: mar-01) :');
   if (!val || !val.trim()) return;
+  if (JOUR_OPTIONS.some(j => j.value === val.trim())) { alert(`L'identifiant « ${val.trim()} » existe déjà.`); return; }
   const label = prompt('Libellé du jour (ex: Mardi 1er) :');
   if (!label || !label.trim()) return;
   JOUR_OPTIONS.push({ value: val.trim(), label: label.trim() });
+  configDirty.add('jourOptions');
   SECTIONS = buildSections();
   renderSection();
   toast('Jour ajouté (pensez à sauvegarder)');
@@ -2104,18 +2241,35 @@ function editDate(idx) {
   const current = JOUR_OPTIONS[idx];
   const newVal = prompt('Identifiant :', current.value);
   if (!newVal || !newVal.trim()) return;
+  const nv = newVal.trim();
+  if (nv !== current.value && JOUR_OPTIONS.some(j => j.value === nv)) { alert(`L'identifiant « ${nv} » existe déjà.`); return; }
   const newLabel = prompt('Libellé :', current.label);
   if (!newLabel || !newLabel.trim()) return;
-  JOUR_OPTIONS[idx] = { value: newVal.trim(), label: newLabel.trim() };
+  JOUR_OPTIONS[idx] = { value: nv, label: newLabel.trim() };
+  configDirty.add('jourOptions');
+  // Identifiant changé : les éléments de ce jour le suivent (programme, repas, services masqués)
+  if (nv !== current.value) {
+    let n = 0;
+    ['programme', 'repas'].forEach(k => (data[k] || []).forEach(it => { if (it && it.jour === current.value) { it.jour = nv; n++; } }));
+    if (disabledServices[current.value]) {
+      disabledServices[nv] = disabledServices[current.value];
+      delete disabledServices[current.value];
+      configDirty.add('disabledServices');
+    }
+    if (n) { sectionsEnAttente.add('programme'); sectionsEnAttente.add('repas'); }
+  }
   SECTIONS = buildSections();
   renderSection();
-  toast('Jour modifié (pensez à sauvegarder)');
+  toast(nv !== current.value
+    ? 'Jour modifié ; programme et repas suivent (pensez à sauvegarder)'
+    : 'Jour modifié (pensez à sauvegarder)');
 }
 
 function removeDate(idx) {
   const day = JOUR_OPTIONS[idx];
-  if (!confirm(`Supprimer "${day.label}" ? Les éléments assignés à ce jour ne seront pas supprimés.`)) return;
+  if (!confirm(`Supprimer « ${day.label} » ? Les éléments assignés à ce jour ne seront pas supprimés.`)) return;
   JOUR_OPTIONS.splice(idx, 1);
+  configDirty.add('jourOptions');
   SECTIONS = buildSections();
   renderSection();
   toast('Jour supprimé (pensez à sauvegarder)');
@@ -2141,8 +2295,10 @@ function renderServiceTypeManager() {
 function addServiceType() {
   const fr = prompt('Nom du service (FR) :');
   if (!fr || !fr.trim()) return;
+  if (SERVICE_TYPES.some(s => s.value_fr === fr.trim())) { alert(`Le type « ${fr.trim()} » existe déjà.`); return; }
   const en = prompt('Nom du service (EN) :') || fr;
   SERVICE_TYPES.push({ value_fr: fr.trim(), value_en: en.trim() });
+  configDirty.add('serviceTypes');
   SECTIONS = buildSections();
   renderSection();
   toast('Type de service ajouté (pensez à sauvegarder)');
@@ -2153,9 +2309,11 @@ function editServiceType(idx) {
   const oldFr = current.value_fr;
   const newFr = prompt('Nom (FR) :', current.value_fr);
   if (!newFr || !newFr.trim()) return;
+  if (SERVICE_TYPES.some((s, i) => i !== idx && s.value_fr === newFr.trim())) { alert(`Le type « ${newFr.trim()} » existe déjà.`); return; }
   const newEn = prompt('Nom (EN) :', current.value_en);
   if (!newEn || !newEn.trim()) return;
   SERVICE_TYPES[idx] = { value_fr: newFr.trim(), value_en: newEn.trim() };
+  configDirty.add('serviceTypes');
   // Update existing repas items with old service name
   (data.repas || []).forEach(item => {
     if (item.service_fr === oldFr) {
@@ -2163,6 +2321,15 @@ function editServiceType(idx) {
       item.service_en = newEn.trim();
     }
   });
+  // … et les services masqués qui portent ce nom
+  if (newFr.trim() !== oldFr) {
+    for (const d of Object.keys(disabledServices)) {
+      if ((disabledServices[d] || []).includes(oldFr)) {
+        disabledServices[d] = disabledServices[d].map(s => s === oldFr ? newFr.trim() : s);
+        configDirty.add('disabledServices');
+      }
+    }
+  }
   SECTIONS = buildSections();
   renderSection();
   toast('Type de service modifié (pensez à sauvegarder)');
@@ -2170,8 +2337,9 @@ function editServiceType(idx) {
 
 function removeServiceType(idx) {
   const svc = SERVICE_TYPES[idx];
-  if (!confirm(`Supprimer le type "${svc.value_fr}" ? Les plats assignés garderont leur type actuel.`)) return;
+  if (!confirm(`Supprimer le type « ${svc.value_fr} » ? Les plats assignés garderont leur type actuel.`)) return;
   SERVICE_TYPES.splice(idx, 1);
+  configDirty.add('serviceTypes');
   SECTIONS = buildSections();
   renderSection();
   toast('Type de service supprimé (pensez à sauvegarder)');
@@ -2182,8 +2350,9 @@ function removeServiceType(idx) {
    ══════════════════════════════════════ */
 function toggleCafeVisibility(visible) {
   cafeVisible = visible;
+  configDirty.add('cafeVisible');
   renderSection();
-  toast(visible ? 'Carte visible sur l\'app' : 'Carte masquée sur l\'app — pensez à sauvegarder');
+  toast(visible ? 'Carte visible sur l\'app — pensez à sauvegarder' : 'Carte masquée sur l\'app — pensez à sauvegarder');
 }
 
 /* ══════════════════════════════════════
@@ -2209,7 +2378,7 @@ function duplicateHoraireDay(sourceDay) {
     return;
   }
 
-  if (!confirm(`Dupliquer les horaires de "${sourceDay}" (${lieu === 'cafe' ? 'Café' : 'Boutique'}) sur ${otherDays.length} autre(s) jour(s) ?\n\nJours concernés : ${otherDays.join(', ')}\n\nLes horaires existants de ces jours seront remplacés.`)) return;
+  if (!confirm(`Dupliquer les horaires de "${sourceDay}" (${lieuLabel(lieu)}) sur ${otherDays.length} autre(s) jour(s) ?\n\nJours concernés : ${otherDays.join(', ')}\n\nLes horaires existants de ces jours seront remplacés.`)) return;
 
   // For each target day, remove existing items and add copies of source
   for (const targetDay of otherDays) {
@@ -2392,8 +2561,7 @@ function previewSection() {
 }
 
 function pvRenderProgramme(items) {
-  const dayOrder = JOUR_OPTIONS.map(j => j.value);
-  const availDays = [...new Set(items.map(r => r.jour))].sort((a,b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+  const availDays = pvSortDays([...new Set(items.map(r => r.jour))]);
   if (!availDays.includes(pvActiveDay)) pvActiveDay = availDays[0] || null;
 
   let html = '<div class="pv-section-head"><h2>Programme</h2></div>';
@@ -2402,7 +2570,7 @@ function pvRenderProgramme(items) {
   html += '<div class="pv-day-strip">';
   for (const d of availDays) {
     const label = (JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d;
-    html += `<button class="pv-day-pill${d===pvActiveDay?' active':''}" onclick="pvSelectDay('${escAttr(d)}')">${escHtml(label)}</button>`;
+    html += `<button class="pv-day-pill${d===pvActiveDay?' active':''}" onclick="pvSelectDay(${jsArg(d)})">${escHtml(label)}</button>`;
   }
   html += '</div>';
 
@@ -2427,8 +2595,7 @@ function pvRenderProgramme(items) {
 }
 
 function pvRenderRepas(items) {
-  const dayOrder = JOUR_OPTIONS.map(j => j.value);
-  const mealDays = [...new Set(items.map(r => r.jour))].sort((a,b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+  const mealDays = pvSortDays([...new Set(items.map(r => r.jour))]);
   if (!mealDays.includes(pvActiveDay)) pvActiveDay = mealDays[0] || null;
 
   let html = '<div class="pv-section-head"><h2>Repas</h2></div>';
@@ -2437,7 +2604,7 @@ function pvRenderRepas(items) {
   html += '<div class="pv-day-strip">';
   for (const d of mealDays) {
     const label = (JOUR_OPTIONS.find(j=>j.value===d)||{}).label||d;
-    html += `<button class="pv-day-pill${d===pvActiveDay?' active':''}" onclick="pvSelectDay('${escAttr(d)}')">${escHtml(label)}</button>`;
+    html += `<button class="pv-day-pill${d===pvActiveDay?' active':''}" onclick="pvSelectDay(${jsArg(d)})">${escHtml(label)}</button>`;
   }
   html += '</div>';
 
@@ -2462,17 +2629,19 @@ function pvRenderRepas(items) {
         <div class="pv-meal-svc-time">${escHtml(s.time)}</div>
         <div style="display:flex;flex-direction:column;gap:6px;">`;
     for (const d of s.dishes) {
-      let diets = [];
-      if (d.vegan === true || d.vegan === 'true') diets.push('veg');
-      if (d.sans_gluten === true || d.sans_gluten === 'true') diets.push('vgf');
-      const dietLabels = {veg:'Végétarien', vgf:'Végan SG'};
+      // Mêmes badges que l'app : « Végan » et « Sans gluten », indépendants
+      const fl = dietFlags(d);
+      const diets = [];
+      if (fl.vegan) diets.push('veg');
+      if (fl.sg) diets.push('vgf');
+      const dietLabels = {veg:'Végan', vgf:'Sans gluten'};
       const allergenCodes = (d.allergenes||'').split(',').map(x=>x.trim()).filter(Boolean);
       html += `<div class="pv-meal-dish">
         <div class="pv-meal-dish-name">${escHtml(d.plat_fr||'')}</div>
         ${diets.length ? '<div class="pv-diet-badges">' + diets.map(dt => '<span class="pv-diet-badge '+dt+'">'+(dietLabels[dt]||dt)+'</span>').join('') + '</div>' : ''}
         ${allergenCodes.length ? '<div class="pv-allergen-chips">' + allergenCodes.map(c => {
           const a = ALLERGEN_LIST.find(x=>x.code===c);
-          return '<span class="pv-allergen-chip">'+(a?a.icon+' '+a.label:c)+'</span>';
+          return '<span class="pv-allergen-chip">'+(a?a.icon+' '+a.label:escHtml(c))+'</span>';
         }).join('') + '</div>' : ''}
       </div>`;
     }
@@ -2505,7 +2674,9 @@ function pvRenderCafe(items) {
   for (const cat of catOrder) {
     html += `<div class="pv-menu-cat"><div class="pv-menu-cat-label">${escHtml(cat)}</div>`;
     for (const it of cats[cat]) {
-      html += `<div class="pv-menu-row"><span class="pv-menu-name">${escHtml(it.nom_fr||'')}</span><span class="pv-menu-price">${escHtml(it.prix||'')}</span></div>`;
+      const fl = dietFlags(it);
+      const badges = (fl.vegan ? ' <span class="pv-diet-badge veg">Végan</span>' : '') + (fl.sg ? ' <span class="pv-diet-badge vgf">Sans gluten</span>' : '');
+      html += `<div class="pv-menu-row"><span class="pv-menu-name">${escHtml(it.nom_fr||'')}${badges}</span><span class="pv-menu-price">${escHtml(it.prix||'')}</span></div>`;
     }
     html += '</div>';
   }
@@ -2534,6 +2705,17 @@ function pvRenderHoraires(items) {
     html += '<div style="padding:12px;"><div class="pv-card">';
     html += '<div class="pv-card-header"><div class="pv-card-icon shop">🛍</div><div><div class="pv-card-title">Boutique du Dharma</div></div></div>';
     shopItems.forEach(it => {
+      html += `<div class="pv-hours-row"><span class="pv-hours-day">${escHtml(it.jour_fr||'')}</span><span class="pv-hours-time">${escHtml(it.ouverture||'')} – ${escHtml(it.fermeture||'')}</span></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Accueil / Info hours
+  const infoItems = items.filter(it => it.lieu === 'info');
+  if (infoItems.length) {
+    html += '<div style="padding:12px;"><div class="pv-card">';
+    html += '<div class="pv-card-header"><div class="pv-card-icon shop">ℹ️</div><div><div class="pv-card-title">Accueil / Info</div></div></div>';
+    infoItems.forEach(it => {
       html += `<div class="pv-hours-row"><span class="pv-hours-day">${escHtml(it.jour_fr||'')}</span><span class="pv-hours-time">${escHtml(it.ouverture||'')} – ${escHtml(it.fermeture||'')}</span></div>`;
     });
     html += '</div></div>';
@@ -2573,6 +2755,13 @@ function pvRenderAlertes(items) {
   }
   html += '</div>';
   return html;
+}
+
+// Jours de l'aperçu : jours de la liste dans l'ordre, puis jours inconnus (comme l'app)
+function pvSortDays(keys) {
+  const order = JOUR_OPTIONS.map(j => j.value);
+  const rang = k => { const i = order.indexOf(k); return i === -1 ? order.length + keys.indexOf(k) : i; };
+  return keys.slice().sort((a, b) => rang(a) - rang(b));
 }
 
 function pvSelectDay(day) {
