@@ -38,12 +38,12 @@
   --border-light: #F5EBE7;
   --shadow: rgba(180, 48, 90, 0.06);
   --shadow-md: rgba(180, 48, 90, 0.1);
-  --nav-bg: #22594E;
+  --nav-bg: #17443B;
   --nav-text: rgba(166, 213, 186, 0.65);
   --nav-active: #EB570F;
   --radius: 14px;
   --radius-sm: 10px;
-  --nav-h: 52px;
+  --nav-h: 66px;
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
 }
@@ -338,28 +338,35 @@ a:hover { text-decoration: underline; }
    ══════════════════════════════════════ */
 .top-nav {
   position: sticky; top: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: stretch;
+  display: flex; align-items: stretch; gap: 2px;
   height: var(--nav-h);
+  padding: 6px 4px;
   background: var(--nav-bg);
   border-bottom: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
+/* Barre d'onglets « version C » (23/11) : textes blancs en gras, onglet ouvert en pastille blanche */
 .nav-item {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 2px;
-  color: var(--nav-text);
-  transition: color 0.2s;
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  color: #fff;
+  border-radius: 12px;
+  transition: color 0.2s, background 0.2s;
   -webkit-tap-highlight-color: transparent;
   padding: 4px 0;
 }
-.nav-item.active { color: var(--nav-active); }
-.nav-item svg { width: 20px; height: 20px; }
+.nav-item.active { color: var(--nav-bg); background: #fff; }
+.nav-item svg { width: 23px; height: 23px; stroke-width: 2.1; }
 .nav-label {
-  font-size: 9px; font-weight: 600;
-  letter-spacing: 0.04em; text-transform: uppercase;
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.03em; text-transform: uppercase;
   white-space: nowrap;
 }
-@media (max-width: 380px) { .nav-label { font-size: 8px; letter-spacing: 0.02em; } }
+/* Petits écrans : la taille des noms suit la largeur pour que « PROGRAMME » tienne toujours dans sa case */
+@media (max-width: 480px) {
+  .nav-label { font-size: clamp(7px, calc((100vw - 52px) * 0.0262), 10.5px); letter-spacing: 0; }
+}
+@media (max-width: 370px) { .nav-item svg { width: 21px; height: 21px; } }
 
 /* ══════════════════════════════════════
    SECTIONS
@@ -371,6 +378,15 @@ a:hover { text-decoration: underline; }
   padding: 20px 20px 14px;
   border-bottom: 1px solid var(--border-light);
 }
+.section-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.carte-btn {
+  flex-shrink: 0;
+  padding: 8px 14px; border-radius: 20px;
+  background: var(--saffron); color: var(--on-accent, #fff);
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+  box-shadow: 0 2px 6px var(--shadow-md);
+}
+.carte-btn.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
 .section-head h2 {
   font-family: var(--font-display);
   font-size: 24px; font-weight: 700;
@@ -500,9 +516,9 @@ a:hover { text-decoration: underline; }
 /* ── Notification bell (nav) ── */
 .nav-bell {
   position: relative;
-  flex: 0 0 44px;
+  flex: 0 0 40px;
   display: flex; align-items: center; justify-content: center;
-  color: var(--nav-text);
+  color: #fff;
   -webkit-tap-highlight-color: transparent;
 }
 .nav-bell svg { width: 20px; height: 20px; }
@@ -1157,8 +1173,9 @@ a:hover { text-decoration: underline; }
 
   <!-- World Peace Café -->
   <div class="section" id="sec-cafe">
-    <div class="section-head">
+    <div class="section-head section-head-row">
       <h2 data-i18n="s_cafe">World Peace Café</h2>
+      <button class="carte-btn" id="cafeCarteBtn" onclick="toggleCarteCafe()" style="display:none"></button>
     </div>
     <div class="day-strip" id="cafeDayStrip"></div>
     <div class="section-body" id="cafeBody">
@@ -1169,7 +1186,7 @@ a:hover { text-decoration: underline; }
   <!-- Boutique -->
   <div class="section" id="sec-boutique">
     <div class="section-head">
-      <h2 data-i18n="s_boutique">Boutique du Dharma</h2>
+      <h2 data-i18n="s_boutique">Boutique</h2>
     </div>
     <div class="day-strip" id="boutiqueDayStrip"></div>
     <div class="section-body" id="boutiqueBody">
@@ -1235,7 +1252,7 @@ const I18N = {
   s_prog:        { fr: 'Programme', en: 'Schedule' },
   // s_prog_sub removed
   s_cafe:        { fr: 'World Peace Café', en: 'World Peace Café' },
-  s_boutique:    { fr: 'Boutique du Dharma', en: 'Dharma Shop' },
+  s_boutique:    { fr: 'Boutique', en: 'Shop' },
   s_accueil:     { fr: 'Accueil / Info', en: 'Welcome / Info desk' },
   accueil_lieu:  { fr: 'Dans la galerie, avec l\'espace bénévolat', en: 'In the gallery, with the volunteer desk' },
   accueil_note:  { fr: 'Pour toute question pendant la Célébration. En dehors des horaires d\'ouverture des inscriptions, c\'est l\'Accueil qui vous renseigne.', en: 'For any question during the Celebration. When the registration desk is closed, the Welcome desk can help you.' },
@@ -1539,6 +1556,12 @@ let jourProgChoisi = false;
 function selectDay(k) { activeDay = k; jourProgChoisi = true; renderSchedule(); }
 function selectMealDay(k) { activeMealDay = k; renderMeals(); }
 function selectCafeDay(k) { activeCafeDay = k; cafeDayChoisi = true; renderCafe(); }
+// Bouton « Voir la carte » / « Horaires » à côté du titre du café
+function toggleCarteCafe() {
+  if (activeCafeDay !== '__carte__') { selectCafeDay('__carte__'); return; }
+  const jours = hoursByDay('cafe').days;
+  if (jours.length) selectCafeDay(dayParDefaut(jours));
+}
 function selectBoutiqueDay(k) { activeBoutiqueDay = k; boutiqueDayChoisi = true; renderBoutique(); }
 
 // ── Schedule (from Sheet or fallback) ──
@@ -1652,12 +1675,19 @@ function renderCafe() {
   if (!cafeDayChoisi && cafeDays.includes(todayKey())) activeCafeDay = todayKey();
   if (!allTabs.includes(activeCafeDay)) activeCafeDay = allTabs.length ? allTabs[0] : '__carte__';
 
-  // Render tabs
-  const carteLabel = t(I18N.voir_carte);
-  document.getElementById('cafeDayStrip').innerHTML = allTabs.map(k => {
-    const label = k === '__carte__' ? ('🍽 ' + carteLabel) : t(DAY_LABELS[k] || {fr:k,en:k});
-    return '<button class="day-pill' + (k === activeCafeDay ? ' active' : '') + '" onclick="selectCafeDay(\'' + k + '\')">' + label + '</button>';
-  }).join('');
+  // Jours en pastilles ; « Voir la carte » : bouton à côté du titre (toujours visible, même sur petit écran)
+  document.getElementById('cafeDayStrip').innerHTML = cafeDays.map(k =>
+    '<button class="day-pill' + (k === activeCafeDay ? ' active' : '') + '" onclick="selectCafeDay(\'' + k + '\')">' + t(DAY_LABELS[k] || {fr:k,en:k}) + '</button>'
+  ).join('');
+  const carteBtn = document.getElementById('cafeCarteBtn');
+  if (carteBtn) {
+    carteBtn.style.display = cafeCarteVisible ? '' : 'none';
+    const surCarte = activeCafeDay === '__carte__';
+    carteBtn.classList.toggle('active', surCarte);
+    carteBtn.innerHTML = surCarte && cafeDays.length
+      ? '🕐 ' + (lang === 'fr' ? 'Horaires' : 'Hours')
+      : '🍽 ' + t(I18N.voir_carte);
+  }
 
   const body = document.getElementById('cafeBody');
 
@@ -1702,14 +1732,14 @@ function renderBoutique() {
 
     const list = boutiqueDayMap[activeBoutiqueDay] || [];
     document.getElementById('boutiqueBody').innerHTML = list.length
-      ? '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique du Dharma',en:'Dharma Shop'}) + '</div></div></div>' +
+      ? '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique',en:'Shop'}) + '</div></div></div>' +
         hoursStatusHtml(list, activeBoutiqueDay) + hoursRowsHtml(list, activeBoutiqueDay) +
         '<div class="menu-note">' + t(I18N.boutique_pay) + '</div></div>'
       : '';
   } else {
     // No boutique hours available yet — show placeholder
     document.getElementById('boutiqueDayStrip').innerHTML = '';
-    document.getElementById('boutiqueBody').innerHTML = '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique du Dharma',en:'Dharma Shop'}) + '</div></div></div>' +
+    document.getElementById('boutiqueBody').innerHTML = '<div class="card"><div class="card-header"><div class="card-icon shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="card-title">' + t({fr:'Boutique',en:'Shop'}) + '</div></div></div>' +
       '<p style="color:var(--text-muted);font-size:14px;padding:4px 0">' + (lang === 'fr' ? 'Horaires à venir prochainement' : 'Hours coming soon') + '</p>' +
       '<div class="menu-note">' + t(I18N.boutique_pay) + '</div></div>';
   }

@@ -2923,7 +2923,7 @@ function pvRenderHoraires(items) {
   const shopItems = items.filter(it => it.lieu === 'shop');
   if (shopItems.length) {
     html += '<div style="padding:12px;"><div class="pv-card">';
-    html += '<div class="pv-card-header"><div class="pv-card-icon shop">🛍</div><div><div class="pv-card-title">Boutique du Dharma</div></div></div>';
+    html += '<div class="pv-card-header"><div class="pv-card-icon shop">🛍</div><div><div class="pv-card-title">Boutique</div></div></div>';
     shopItems.forEach(it => {
       html += `<div class="pv-hours-row"><span class="pv-hours-day">${escHtml(it.jour_fr||'')}</span><span class="pv-hours-time">${escHtml(it.ouverture||'')} – ${escHtml(it.fermeture||'')}</span></div>`;
     });
