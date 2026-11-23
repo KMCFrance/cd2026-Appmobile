@@ -2478,7 +2478,7 @@ async function renderAnalytics() {
       const maxSec = secEntries[0][1] || 1;
       html += '<h4 style="margin-top:20px;margin-bottom:8px;">Sections populaires</h4>';
       html += '<div style="display:flex;flex-direction:column;gap:6px;">';
-      const sectionLabels = { programme: 'Programme', cafe: 'World Peace Cafe', boutique: 'Boutique', repas: 'Repas', infos: 'Infos' };
+      const sectionLabels = { programme: 'Programme', cafe: 'World Peace Cafe', boutique: 'Boutique', accueil: 'Accueil / Info', repas: 'Repas', infos: 'Infos' };
       for (const [sec, count] of secEntries) {
         const pct = Math.round((count / maxSec) * 100);
         const label = sectionLabels[sec] || sec;
