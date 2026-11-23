@@ -831,6 +831,14 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
   border-radius: 6px; background: var(--surface); color: var(--text);
   font-family: var(--font-body); width: 140px;
 }
+/* Salle par groupe (programme) */
+.salles-grid { display: flex; flex-direction: column; gap: 6px; }
+.salles-row { display: flex; align-items: center; gap: 10px; }
+.salles-row > span { flex: 0 0 210px; font-size: 0.85rem; }
+.salles-row small { color: var(--text-muted); }
+.salles-row select { flex: 1; }
+.salles-tous > span { font-weight: 600; }
+.salles-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.15); }
 </style>
 </head>
 <body>
@@ -977,6 +985,41 @@ let cafeVisible = true;
 let disabledServices = {}; // { 'ven-27': ['Dîner'], ... } — services hidden per day
 
 function getJourOptions() { return JOUR_OPTIONS; }
+
+/* Salles possibles pour une séance (même liste dans index.html) */
+const SALLES = [
+  { value: 'smp',      label: 'Salle de méditation principale (SMP)' },
+  { value: 'retrans',  label: 'Chapiteau de retransmission' },
+  { value: 'familles', label: 'Salle de retransmission familles' },
+];
+// Groupes (gompas) définis dans la section Groupes
+function getGroupes() { return (data.groupes || []).filter(g => g && g.code && CODE_GROUPE_OK.test(g.code)); }
+// Libellés des jours pour les horaires (« Samedi 28 ») et leur traduction (« Saturday 28 »)
+const JOURS_EN = { lundi: 'Monday', lun: 'Mon', mardi: 'Tuesday', mar: 'Tue', mercredi: 'Wednesday', mer: 'Wed', jeudi: 'Thursday', jeu: 'Thu',
+  vendredi: 'Friday', ven: 'Fri', samedi: 'Saturday', sam: 'Sat', dimanche: 'Sunday', dim: 'Sun' };
+const MOIS_EN = { janvier: 'January', 'février': 'February', fevrier: 'February', mars: 'March', avril: 'April', mai: 'May', juin: 'June', juillet: 'July',
+  'août': 'August', aout: 'August', septembre: 'September', octobre: 'October', novembre: 'November', 'décembre': 'December', decembre: 'December' };
+function jourEnDepuisFr(fr) {
+  const m = String(fr || '').trim().match(/^([a-zéû]+)(\.?)\s*(.*)$/i);
+  if (!m) return fr;
+  const en = JOURS_EN[m[1].toLowerCase()];
+  if (!en) return fr;
+  const reste = m[3].replace(/\b1er\b/i, '1').replace(/[a-zéûô]+/gi, w => MOIS_EN[w.toLowerCase()] || w);
+  return en + (reste ? ' ' + reste : '');
+}
+// Heure de Paris (comme l'app) pour les statuts des annonces
+function parisNowAdmin() { return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' })); }
+// Annonce visible dans l'app : mêmes règles que alertActive() de index.html
+function alerteVisible(a) {
+  if (!a || String(a.actif || '').toLowerCase() !== 'oui') return false;
+  const now = parisNowAdmin();
+  if (a.debut && !isNaN(new Date(a.debut)) && now < new Date(a.debut)) return false;
+  if (a.fin && !isNaN(new Date(a.fin)) && now >= new Date(a.fin)) return false;
+  return true;
+}
+// Code de groupe : lettres, chiffres, - et _ (il sert de clé dans Firebase)
+const CODE_GROUPE_OK = /^[A-Za-z0-9_-]{1,20}$/;
+function getJourLabelOptions() { return JOUR_OPTIONS.map(j => ({ value: j.label, label: j.label })); }
 function getServiceOptions() {
   return SERVICE_TYPES.map(s => ({ value: s.value_fr, label: s.value_fr }));
 }
@@ -1006,6 +1049,7 @@ function buildSections() {
         { key: 'desc_en', label: 'Description (EN)', type: 'textarea', full: true },
         { key: 'sadhana_fr', label: 'Sadhana utilisée (FR)', type: 'text', full: true, placeholder: 'Ex: Prières pour la méditation' },
         { key: 'sadhana_en', label: 'Sadhana utilisée (EN)', type: 'text', full: true, placeholder: 'Ex: Prayers for meditation' },
+        { key: 'salles', label: 'Salle par groupe (vide = non indiqué)', type: 'salles-groupes', full: true },
       ],
     },
     cafe: {
@@ -1034,8 +1078,8 @@ function buildSections() {
           { value: 'shop', label: 'Boutique' },
           { value: 'info', label: 'Accueil / Info' },
         ]},
-        { key: 'jour_fr', label: 'Jour (FR)', type: 'text' },
-        { key: 'jour_en', label: 'Jour (EN)', type: 'text' },
+        { key: 'jour_fr', label: 'Jour', type: 'select', options: getJourLabelOptions },
+        { key: 'jour_en', label: 'Jour (EN) — rempli automatiquement', type: 'text' },
         { key: 'ouverture', label: 'Ouverture', type: 'text', placeholder: '08h00' },
         { key: 'fermeture', label: 'Fermeture', type: 'text', placeholder: '21h00' },
       ],
@@ -1075,13 +1119,15 @@ function buildSections() {
     alertes: {
       label: 'Alertes',
       titleField: 'titre_fr',
-      subField: item => `${item.emoji||''} ${item.actif === 'oui' ? 'Active' : 'Inactive'}`,
+      subField: item => `${item.emoji||''} ${statutAlerte(item)}`,
       fields: [
         { key: 'id', label: 'Identifiant', type: 'text' },
         { key: 'actif', label: 'Active', type: 'select', options: [
           { value: 'oui', label: 'Oui' },
           { value: 'non', label: 'Non' },
         ]},
+        { key: 'debut', label: 'Afficher à partir du (facultatif)', type: 'datetime-local' },
+        { key: 'fin', label: 'Ne plus afficher à partir du (facultatif)', type: 'datetime-local' },
         { key: 'emoji', label: 'Emoji', type: 'text', placeholder: '⚠️' },
         { key: 'titre_fr', label: 'Titre (FR)', type: 'text', full: true },
         { key: 'titre_en', label: 'Titre (EN)', type: 'text', full: true },
@@ -1089,7 +1135,31 @@ function buildSections() {
         { key: 'contenu_en', label: 'Contenu (EN) — HTML accepte', type: 'textarea', full: true },
       ],
     },
+    groupes: {
+      label: 'Groupes',
+      titleField: 'nom_fr',
+      subField: item => `${item.code || '(sans code)'} — ● ${item.couleur || ''}`,
+      fields: [
+        { key: 'code', label: 'Code du gompa (comme sur le badge)', type: 'text', placeholder: 'G1' },
+        { key: 'couleur', label: 'Couleur (celle du badge)', type: 'color', default: '#3367BB' },
+        { key: 'nom_fr', label: 'Nom (FR)', type: 'text', placeholder: 'Groupe bleu' },
+        { key: 'nom_en', label: 'Nom (EN)', type: 'text', placeholder: 'Blue group' },
+      ],
+    },
   };
+}
+
+// Statut d'une annonce pour la liste de l'admin (mêmes règles que l'app)
+function fmtDateHeure(v) {
+  const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  return m ? `${m[3]}/${m[2]} ${m[4]}h${m[5]}` : v;
+}
+function statutAlerte(a) {
+  if (!a || String(a.actif || '').toLowerCase() !== 'oui') return 'Inactive';
+  const now = parisNowAdmin();
+  if (a.debut && now < new Date(a.debut)) return `Programmée (à partir du ${fmtDateHeure(a.debut)})`;
+  if (a.fin && now >= new Date(a.fin)) return `Terminée (le ${fmtDateHeure(a.fin)})`;
+  return a.fin ? `Active jusqu'au ${fmtDateHeure(a.fin)}` : 'Active';
 }
 
 let SECTIONS = buildSections();
@@ -1103,6 +1173,7 @@ let addingNew = {};   // { sectionKey: true } if the "add" form is open
 let addingNewGroup = {};  // { sectionKey: groupKey } — add within a specific group
 let expandedItems = {}; // { sectionKey: Set of indices }
 let lastSaved = {};   // { sectionKey: timestamp string }
+let groupeTheme = true; // réglage Firebase config/groupeTheme : couleur de l'app selon le groupe
 let horaireFilter = 'cafe'; // 'cafe' | 'shop' | 'info'
 // Pôles (lieux) des horaires : libellés de l'admin
 const LIEUX_HORAIRES = { cafe: 'Café', shop: 'Boutique', info: 'Accueil / Info' };
@@ -1361,6 +1432,9 @@ async function loadData() {
       if (configResult.cafeVisible !== undefined) {
         cafeVisible = configResult.cafeVisible !== false;
       }
+      if (configResult.groupeTheme !== undefined) {
+        groupeTheme = configResult.groupeTheme !== false;
+      }
       if (configResult.disabledServices && typeof configResult.disabledServices === 'object') {
         disabledServices = {};
         for (const [d, v] of Object.entries(configResult.disabledServices)) {
@@ -1432,6 +1506,24 @@ function renderSection() {
       <span style="font-size:0.78rem;color:var(--text-muted);margin-left:auto;">
         ${cafeVisible ? '✅ Visible' : '🚫 Masquée'}
       </span>
+    </div>`;
+  }
+
+  // ── Groupes : couleur de l'app ──
+  if (key === 'groupes') {
+    html += `<div class="cafe-visibility-toggle">
+      <label>
+        <input type="checkbox" ${groupeTheme ? 'checked' : ''}
+          onchange="toggleGroupeTheme(this.checked)">
+        Colorer l'application avec la couleur du groupe choisi
+      </label>
+      <span style="font-size:0.78rem;color:var(--text-muted);margin-left:auto;">
+        ${groupeTheme ? '🎨 Activé' : 'Couleurs habituelles'}
+      </span>
+    </div>
+    <div style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 12px;line-height:1.4">
+      Les participants choisissent leur groupe (la couleur de leur badge) au premier lancement de l'app.
+      La salle de chaque groupe se règle séance par séance, dans l'onglet Programme.
     </div>`;
   }
 
@@ -1720,7 +1812,7 @@ function renderItemCard(key, schema, item, idx, totalCount) {
     <div class="item-summary">
       <div class="item-summary-text" onclick="toggleItem('${key}', ${idx})">
         <div class="item-title">${escHtml(title)}${badges}</div>
-        <div class="item-sub">${escHtml(sub)}</div>
+        <div class="item-sub">${key === 'groupes' && /^#[0-9a-f]{6}$/i.test(item.couleur || '') ? `<span class="salles-dot" style="background:${item.couleur}"></span>` : ''}${escHtml(sub)}</div>
       </div>
       <div class="item-actions">
         <button onclick="toggleItem('${key}', ${idx})" title="${isOpen ? 'Fermer' : 'Editer'}">${isOpen ? '&#9650;' : '&#9998;'}</button>
@@ -1805,12 +1897,47 @@ function renderFields(fields, item, sectionKey, idx, hideCategories) {
       }
       // For service_fr in repas: auto-fill service_en on change
       const extraOnChange = (sectionKey === 'repas' && f.key === 'service_fr')
-        ? `autoFillServiceEn('${idx}', this.value);` : '';
+        ? `autoFillServiceEn('${idx}', this.value);`
+        : (sectionKey === 'horaires' && f.key === 'jour_fr') ? `autoFillJourEn('${idx}', this.value);` : '';
       input = `<select id="${inputId}" onchange="updateField('${sectionKey}', '${idx}', '${f.key}', this.value); ${extraOnChange}">
         <option value="">—</option>${opts}</select>`;
     } else if (f.type === 'textarea') {
       input = `<textarea id="${inputId}" rows="3" placeholder="${f.placeholder||''}"
         oninput="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">${escHtml(val)}</textarea>`;
+    } else if (sectionKey === 'groupes' && f.key === 'code') {
+      input = `<input type="text" id="${inputId}" value="${escAttr(val)}" placeholder="${f.placeholder||''}" maxlength="20"
+        onchange="changerCodeGroupe('${idx}', this)">`;
+    } else if (f.type === 'color') {
+      const c = /^#[0-9a-f]{6}$/i.test(val) ? val : (f.default || '#3367BB');
+      input = `<div style="display:flex;gap:8px;align-items:center;">
+        <input type="color" id="${inputId}" value="${escAttr(c)}" style="width:52px;height:34px;padding:0;border:none;background:none;"
+          oninput="updateField('${sectionKey}', '${idx}', '${f.key}', this.value); this.nextElementSibling.value = this.value">
+        <input type="text" value="${escAttr(c)}" style="width:110px" maxlength="7"
+          oninput="if (/^#[0-9a-f]{6}$/i.test(this.value)) { updateField('${sectionKey}', '${idx}', '${f.key}', this.value); this.previousElementSibling.value = this.value; }">
+      </div>`;
+      if (idx === 'new' && !val) setTimeout(() => updateField(sectionKey, idx, f.key, c), 0);
+    } else if (f.type === 'datetime-local') {
+      input = `<div style="display:flex;gap:8px;align-items:center;">
+        <input type="datetime-local" id="${inputId}" value="${escAttr(val)}"
+          onchange="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">
+        <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:0.8rem"
+          onclick="this.previousElementSibling.value=''; updateField('${sectionKey}', '${idx}', '${f.key}', '')">Effacer</button>
+      </div>`;
+    } else if (f.type === 'salles-groupes') {
+      const groupes = getGroupes();
+      const salles = (val && typeof val === 'object') ? val : {};
+      if (!groupes.length) {
+        input = `<div style="font-size:0.82rem;color:var(--text-muted)">Créez d'abord les groupes (onglet Groupes).</div>`;
+      } else {
+        const opts = cur => '<option value="">—</option>' + SALLES.map(sa =>
+          `<option value="${sa.value}" ${cur === sa.value ? 'selected' : ''}>${escHtml(sa.label)}</option>`).join('');
+        input = `<div class="salles-grid">` +
+          `<div class="salles-row salles-tous"><span>Tous les groupes</span>
+            <select onchange="setSalleTous('${sectionKey}', '${idx}', this.value)"><option value="">— appliquer à tous —</option>${SALLES.map(sa => `<option value="${sa.value}">${escHtml(sa.label)}</option>`).join('')}</select></div>` +
+          groupes.map(g => `<div class="salles-row"><span><span class="salles-dot" style="background:${/^#[0-9a-f]{6}$/i.test(g.couleur || '') ? g.couleur : '#cccccc'}"></span>${escHtml(g.nom_fr || g.code)} <small>(${escHtml(g.code)})</small></span>
+            <select onchange="setSalle('${sectionKey}', '${idx}', ${jsArg(g.code)}, this.value)">${opts(salles[g.code] || '')}</select></div>`).join('') +
+          `</div>`;
+      }
     } else {
       input = `<input type="text" id="${inputId}" value="${escAttr(val)}" placeholder="${f.placeholder||''}"
         oninput="updateField('${sectionKey}', '${idx}', '${f.key}', this.value)">`;
@@ -1821,6 +1948,60 @@ function renderFields(fields, item, sectionKey, idx, hideCategories) {
       ${input}
     </div>`;
   }).join('');
+}
+
+/* Horaires : jour (EN) rempli d'après le jour choisi */
+function autoFillJourEn(idx, valueFr) {
+  const en = jourEnDepuisFr(valueFr);
+  updateField('horaires', idx, 'jour_en', en);
+  const enInput = document.getElementById(`field-horaires-${idx}-jour_en`);
+  if (enInput) enInput.value = en;
+}
+
+/* Groupes : changement de code → les salles du programme suivent */
+function changerCodeGroupe(idx, input) {
+  const nouveau = String(input.value || '').trim();
+  const ancien = idx === 'new' ? ((data._new && data._new.groupes && data._new.groupes.code) || '') : (data.groupes[parseInt(idx)].code || '');
+  const autres = (data.groupes || []).filter((g, i) => String(i) !== String(idx)).map(g => g.code);
+  if (!CODE_GROUPE_OK.test(nouveau)) {
+    alert('Code invalide : utilisez seulement des lettres, des chiffres, « - » ou « _ » (ex. G1).');
+    input.value = ancien; return;
+  }
+  if (autres.includes(nouveau)) {
+    alert(`Le code « ${nouveau} » est déjà utilisé par un autre groupe.`);
+    input.value = ancien; return;
+  }
+  input.value = nouveau;
+  updateField('groupes', idx, 'code', nouveau);
+  if (idx !== 'new' && ancien && ancien !== nouveau) {
+    let n = 0;
+    (data.programme || []).forEach(ev => {
+      if (ev && ev.salles && typeof ev.salles === 'object' && ev.salles[ancien] !== undefined) {
+        ev.salles[nouveau] = ev.salles[ancien]; delete ev.salles[ancien]; n++;
+      }
+    });
+    if (n) { sectionsEnAttente.add('programme'); toast(`Code changé : ${n} séance(s) mises à jour (pensez à sauvegarder)`); }
+  }
+}
+
+/* Programme : salle d'un groupe pour une séance */
+function sallesDe(sectionKey, idx) {
+  let item;
+  if (idx === 'new') { if (!data._new) data._new = {}; if (!data._new[sectionKey]) data._new[sectionKey] = {}; item = data._new[sectionKey]; }
+  else item = data[sectionKey][parseInt(idx)];
+  if (!item.salles || typeof item.salles !== 'object') item.salles = {};
+  return item.salles;
+}
+function setSalle(sectionKey, idx, code, value) {
+  const s = sallesDe(sectionKey, idx);
+  if (value) s[code] = value; else delete s[code];
+}
+function setSalleTous(sectionKey, idx, value) {
+  if (!value) return;
+  const s = sallesDe(sectionKey, idx);
+  getGroupes().forEach(g => { s[g.code] = value; });
+  renderSection();
+  toast('Salle appliquée à tous les groupes (pensez à sauvegarder)');
 }
 
 /* Auto-fill service_en when selecting service_fr */
@@ -1864,6 +2045,14 @@ function normaliserElement(sectionKey, item) {
   }
   if (schema) schema.fields.forEach(f => {
     if (f.type === 'checkbox' && f.key !== 'vegan' && f.key !== 'sans_gluten') item[f.key] = estVrai(item[f.key]);
+    if (f.type === 'datetime-local' && !item[f.key]) delete item[f.key];
+    // Salles : seulement les groupes renseignés ; rien si aucun
+    if (f.type === 'salles-groupes') {
+      const sa = (item[f.key] && typeof item[f.key] === 'object') ? item[f.key] : {};
+      const propre = {};
+      Object.keys(sa).forEach(k => { if (sa[k]) propre[k] = sa[k]; });
+      if (Object.keys(propre).length) item[f.key] = propre; else delete item[f.key];
+    }
   });
   return item;
 }
@@ -1954,8 +2143,17 @@ function addItem(sectionKey) {
   const temp = (data._new && data._new[sectionKey]) || {};
   schema.fields.forEach(f => {
     if (f.type === 'checkbox') newItem[f.key] = estVrai(temp[f.key]);   // vrai booléen, jamais ""
+    else if (f.type === 'salles-groupes') { if (temp[f.key] && Object.keys(temp[f.key]).length) newItem[f.key] = Object.assign({}, temp[f.key]); }
     else newItem[f.key] = temp[f.key] !== undefined ? temp[f.key] : (f.default || '');
   });
+
+  // Groupes : code obligatoire, valide et unique (il sert de clé pour les salles)
+  if (sectionKey === 'groupes') {
+    newItem.code = String(newItem.code || '').trim();
+    if (!CODE_GROUPE_OK.test(newItem.code)) { alert('Indiquez un code de groupe valide (lettres, chiffres, « - » ou « _ », ex. G1).'); return; }
+    if ((data.groupes || []).some(g => g.code === newItem.code)) { alert(`Le code « ${newItem.code} » est déjà utilisé.`); return; }
+    if (!/^#[0-9a-f]{6}$/i.test(newItem.couleur || '')) newItem.couleur = '#3367BB';
+  }
 
   // For horaires, pre-fill lieu from filter
   if (sectionKey === 'horaires' && !newItem.lieu) {
@@ -2005,7 +2203,15 @@ function addItem(sectionKey) {
 function deleteItem(sectionKey, idx) {
   const item = data[sectionKey][idx];
   const title = item[SECTIONS[sectionKey].titleField] || '(sans titre)';
-  if (!confirm(`Supprimer "${title}" ?`)) return;
+  if (sectionKey === 'groupes') {
+    const code = item.code;
+    const n = (data.programme || []).filter(ev => ev && ev.salles && ev.salles[code]).length;
+    if (!confirm(`Supprimer le groupe « ${title} » ?` + (n ? `\n\nSa salle est indiquée pour ${n} séance(s) : elle sera retirée du programme.` : ''))) return;
+    if (n) {
+      (data.programme || []).forEach(ev => { if (ev && ev.salles) delete ev.salles[code]; });
+      sectionsEnAttente.add('programme');
+    }
+  } else if (!confirm(`Supprimer "${title}" ?`)) return;
 
   data[sectionKey].splice(idx, 1);
 
@@ -2198,6 +2404,7 @@ async function saveConfig() {
     jourOptions: () => JOUR_OPTIONS,
     serviceTypes: () => SERVICE_TYPES,
     cafeVisible: () => cafeVisible,
+    groupeTheme: () => groupeTheme,
     disabledServices: () => disabledServices,
   };
   for (const k of Array.from(configDirty)) {
@@ -2247,6 +2454,12 @@ function editDate(idx) {
   if (!newLabel || !newLabel.trim()) return;
   JOUR_OPTIONS[idx] = { value: nv, label: newLabel.trim() };
   configDirty.add('jourOptions');
+  // Libellé changé : les horaires de ce jour le suivent (ils sont rangés par libellé)
+  if (newLabel.trim() !== current.label) {
+    let h = 0;
+    (data.horaires || []).forEach(it => { if (it && it.jour_fr === current.label) { it.jour_fr = newLabel.trim(); it.jour_en = jourEnDepuisFr(it.jour_fr); h++; } });
+    if (h) sectionsEnAttente.add('horaires');
+  }
   // Identifiant changé : les éléments de ce jour le suivent (programme, repas, services masqués)
   if (nv !== current.value) {
     let n = 0;
@@ -2348,6 +2561,13 @@ function removeServiceType(idx) {
 /* ══════════════════════════════════════
    CAFÉ VISIBILITY TOGGLE
    ══════════════════════════════════════ */
+function toggleGroupeTheme(on) {
+  groupeTheme = on;
+  configDirty.add('groupeTheme');
+  renderSection();
+  toast(on ? 'Couleur du groupe activée — pensez à sauvegarder' : 'Couleurs habituelles — pensez à sauvegarder');
+}
+
 function toggleCafeVisibility(visible) {
   cafeVisible = visible;
   configDirty.add('cafeVisible');
@@ -2740,7 +2960,7 @@ function pvRenderInfos(items) {
 function pvRenderAlertes(items) {
   let html = '<div class="pv-section-head"><h2>Alertes</h2></div>';
   html += '<div style="padding:12px;">';
-  items.filter(it => it.actif === 'oui').forEach(it => {
+  items.filter(alerteVisible).forEach(it => {
     html += `<div class="pv-card" style="border-left:3px solid var(--saffron);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
         <span style="font-size:20px;">${it.emoji||'⚠️'}</span>
@@ -2749,9 +2969,9 @@ function pvRenderAlertes(items) {
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${it.contenu_fr||''}</div>
     </div>`;
   });
-  const inactive = items.filter(it => it.actif !== 'oui');
+  const inactive = items.filter(it => !alerteVisible(it));
   if (inactive.length) {
-    html += '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">+ ' + inactive.length + ' alerte(s) inactive(s)</div>';
+    html += '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">+ ' + inactive.length + ' alerte(s) non visible(s) en ce moment (inactive, programmée ou terminée)</div>';
   }
   html += '</div>';
   return html;

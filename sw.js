@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cd2026-v24';
+const CACHE_NAME = 'cd2026-v26';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const ASSETS = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
+      .then(cache => cache.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -34,13 +34,18 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(e.request));
     return;
   }
+  // Fichiers du site : on revalide auprès de GitHub à chaque fois (pas d'attente des 10 min de cache),
+  // les autres (polices…) suivent le cache normal du navigateur
+  const memeSite = new URL(e.request.url).origin === self.location.origin;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, memeSite ? { cache: 'no-cache' } : undefined)
       .then(resp => {
+        // Réponse en erreur (404/5xx pendant un déploiement…) : on garde la copie en cache si elle existe
+        if (!resp.ok) return caches.match(e.request, { ignoreSearch: true }).then(c => c || resp);
         const clone = resp.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         return resp;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
 });
