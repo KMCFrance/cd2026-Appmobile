@@ -6,10 +6,12 @@
   "scope": ".",
   "id": "cd2026-app",
   "display": "standalone",
-  "background_color": "#D14E72",
+  "background_color": "#E05B1A",
   "theme_color": "#D14E72",
   "orientation": "portrait",
-  "categories": ["lifestyle"],
+  "categories": [
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "icon-192.png",
