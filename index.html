@@ -230,6 +230,15 @@ a:hover { text-decoration: underline; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Installation : ligne permanente dans l'onglet Infos ── */
+.install-card { display: none; align-items: center; gap: 12px; margin: 0 16px 14px; padding: 12px 14px; background: var(--surface, #fff); border: 1px solid rgba(0,0,0,0.12); border-left: 4px solid var(--green-deep); border-radius: 10px; font-size: 13px; }
+.install-card.show { display: flex; }
+.install-card .ic-icon { font-size: 22px; flex-shrink: 0; }
+.install-card .ic-body { flex: 1; line-height: 1.35; }
+.install-card .ic-body > strong { display: block; font-size: 14px; }
+.install-card .ic-body > span { display: block; font-size: 12px; opacity: 0.75; margin-top: 2px; }
+.install-card .ic-btn { flex-shrink: 0; padding: 8px 16px; background: var(--green-deep); color: #fff; font-size: 12.5px; font-weight: 700; border-radius: 20px; }
+
 /* ── Install banner ── */
 @keyframes ib-slide { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .install-banner {
@@ -1181,6 +1190,7 @@ a:hover { text-decoration: underline; }
       <h2 data-i18n="s_info">Infos pratiques</h2>
       <p data-i18n="s_info_sub">Tout pour votre séjour</p>
     </div>
+    <div class="install-card" id="installCard"><span class="ic-icon">📲</span><div class="ic-body"><strong id="icTitle">Installer l'application</strong><span id="icSub"></span></div><button class="ic-btn" id="icBtn" onclick="doInstall()">Installer</button></div>
     <div class="section-body" id="infosBody"></div>
   </div>
 
@@ -1519,6 +1529,7 @@ function setLang(l) {
     if (I18N[k]) el.textContent = t(I18N[k]);
   });
   renderAll();
+  if (typeof majInstallCard === 'function') majInstallCard();
 }
 
 // ── Day pills ──
@@ -2580,7 +2591,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
 function showBanner() {
   if (isStandalone) return;
-  try { if (localStorage.getItem('cd2026-install-v3')) return; } catch(e) {}
+  try { if (localStorage.getItem('cd2026-install-v4') === new Date().toDateString()) return; } catch(e) {}
 
   const banner = document.getElementById('installBanner');
   const title = document.getElementById('ibTitle');
@@ -2617,6 +2628,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   showBanner();
+  majInstallCard();
 });
 
 // Afficher après 1s si beforeinstallprompt n'a pas été déclenché
@@ -2626,23 +2638,46 @@ if (!isStandalone) {
   }, 1000);
 }
 
+// Ligne permanente de l'onglet Infos (reste même si le bandeau a été fermé)
+function majInstallCard() {
+  const card = document.getElementById('installCard');
+  if (!card) return;
+  if (isStandalone) { card.classList.remove('show'); return; }
+  const fr = lang === 'fr';
+  document.getElementById('icTitle').textContent = fr ? 'Installer l\'application' : 'Install the app';
+  const sub = document.getElementById('icSub'), btn = document.getElementById('icBtn');
+  if (deferredPrompt) {
+    sub.textContent = fr ? 'Accès rapide depuis l\'écran d\'accueil' : 'Quick access from your home screen';
+    btn.textContent = fr ? 'Installer' : 'Install'; btn.style.display = '';
+  } else {
+    sub.innerHTML = isIOS
+      ? (fr ? 'Appuyez sur <strong>⎙</strong> puis <strong>« Sur l\'écran d\'accueil »</strong>' : 'Tap <strong>⎙</strong> then <strong>"Add to Home Screen"</strong>')
+      : (fr ? 'Menu <strong>⋮</strong> du navigateur → <strong>« Ajouter à l\'écran d\'accueil »</strong> ou <strong>« Installer »</strong>' : 'Browser menu <strong>⋮</strong> → <strong>"Add to Home screen"</strong> or <strong>"Install"</strong>');
+    btn.style.display = 'none';
+  }
+  card.classList.add('show');
+}
+majInstallCard();
+
 function doInstall() {
   if (deferredPrompt) {
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(() => {
       deferredPrompt = null;
       document.getElementById('installBanner').classList.remove('show');
+      majInstallCard();
     });
   }
 }
 
 function dismissInstall() {
   document.getElementById('installBanner').classList.remove('show');
-  try { localStorage.setItem('cd2026-install-v3', '1'); } catch(e) {}
+  try { localStorage.setItem('cd2026-install-v4', new Date().toDateString()); } catch(e) {}
 }
 
 window.addEventListener('appinstalled', () => {
   document.getElementById('installBanner').classList.remove('show');
+  const ic = document.getElementById('installCard'); if (ic) ic.classList.remove('show');
   deferredPrompt = null;
 });
 </script>
