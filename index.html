@@ -1191,6 +1191,7 @@ a:hover { text-decoration: underline; }
       <p data-i18n="s_info_sub">Tout pour votre séjour</p>
     </div>
     <div class="install-card" id="installCard"><span class="ic-icon">📲</span><div class="ic-body"><strong id="icTitle">Installer l'application</strong><span id="icSub"></span></div><button class="ic-btn" id="icBtn" onclick="doInstall()">Installer</button></div>
+    <div class="install-card show" id="shareCard"><span class="ic-icon">🔗</span><div class="ic-body"><strong id="shTitle">Partager l'application</strong><span id="shSub">Envoyez le lien à un autre participant</span></div><button class="ic-btn" id="shBtn" onclick="partagerApp()">Partager</button></div>
     <div class="section-body" id="infosBody"></div>
   </div>
 
@@ -1530,6 +1531,7 @@ function setLang(l) {
   });
   renderAll();
   if (typeof majInstallCard === 'function') majInstallCard();
+  if (typeof majShareCard === 'function') majShareCard();
 }
 
 // ── Day pills ──
@@ -2341,7 +2343,8 @@ const SALLES_APP = {
   smp:      { fr: 'Salle de méditation principale', en: 'Main meditation room' },
   retrans:  { fr: 'Salle de retransmission', en: 'Relay room' },
   familles: { fr: 'Salle de retransmission familles', en: 'Family relay room' },
-  traduction: { fr: 'Salle de traduction', en: 'Translation room' },
+  traduction: { fr: 'Salle de traduction (World Peace Café)', en: 'Translation room (World Peace Café)' },
+  'au choix': { fr: 'Salle principale ou salle de retransmission, au choix', en: 'Main room or relay room, your choice' },
 };
 const salleLabel = v => t(SALLES_APP[v] || { fr: v, en: v });
 // Carte « En ce moment / Prochainement » : mêmes noms que dans le programme
@@ -2637,6 +2640,30 @@ if (!isStandalone) {
     if (!deferredPrompt) showBanner();
   }, 1000);
 }
+
+// Partage de l'application (onglet Infos)
+const APP_URL = 'https://kmcfrance.github.io/cd2026-Appmobile/';
+function majShareCard(msg) {
+  const fr = lang === 'fr';
+  const ti = document.getElementById('shTitle'); if (!ti) return;
+  ti.textContent = fr ? 'Partager l\'application' : 'Share the app';
+  document.getElementById('shSub').textContent = msg || (fr ? 'Envoyez le lien à un autre participant' : 'Send the link to another participant');
+  document.getElementById('shBtn').textContent = fr ? 'Partager' : 'Share';
+}
+async function partagerApp() {
+  const fr = lang === 'fr';
+  const titre = fr ? 'Célébration du Dharma 2026' : 'Dharma Celebration 2026';
+  const texte = fr ? 'L\'application de la Célébration du Dharma 2026 : programme, salles, repas, café et infos pratiques.' : 'The Dharma Celebration 2026 app: programme, rooms, meals, café and practical info.';
+  if (navigator.share) {
+    try { await navigator.share({ title: titre, text: texte, url: APP_URL }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  let ok = false;
+  try { await navigator.clipboard.writeText(APP_URL); ok = true; } catch (e) {}
+  majShareCard(ok ? (fr ? 'Lien copié : collez-le dans un message' : 'Link copied: paste it into a message') : APP_URL);
+  if (typeof trackSection === 'function') trackSection('partage');
+}
+majShareCard();
 
 // Ligne permanente de l'onglet Infos (reste même si le bandeau a été fermé)
 function majInstallCard() {
