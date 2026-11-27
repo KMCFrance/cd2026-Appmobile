@@ -2543,6 +2543,28 @@ function renderAll() {
     }, CONFIG.REFRESH_MS);
   }
 
+  // Retour sur l'app (elle était en arrière-plan, écran verrouillé, réseau revenu) : les minuteries
+  // sont gelées pendant ce temps, donc on recharge tout de suite pour afficher les nouvelles annonces.
+  let cacheLe = 0, rechargeEnCours = false;
+  async function rechargerAuRetour() {
+    if (document.visibilityState !== 'visible' || rechargeEnCours || !CONFIG.FIREBASE_URL) return;
+    // Après 30 min d'absence, c'est une nouvelle visite : les annonces « plus tard » reviennent
+    if (cacheLe && Date.now() - cacheLe > 30 * 60 * 1000) popupSeenThisVisit.length = 0;
+    cacheLe = 0;
+    if (sheetData.lastFetch && Date.now() - sheetData.lastFetch.getTime() < 20000) { if (popupShown) checkAlerts(); return; }
+    rechargeEnCours = true;
+    try {
+      const ok = await loadSheetData();
+      if (ok) { renderAll(); if (popupShown) checkAlerts(); }
+    } finally { rechargeEnCours = false; }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') cacheLe = Date.now(); else rechargerAuRetour();
+  });
+  window.addEventListener('pageshow', e => { if (e.persisted) rechargerAuRetour(); });
+  window.addEventListener('focus', rechargerAuRetour);
+  window.addEventListener('online', rechargerAuRetour);
+
   // Refresh countdowns + now/next every 30s
   setInterval(() => {
     renderSchedule();
